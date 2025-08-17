@@ -1,0 +1,48 @@
+{
+	"name": "console-ui",
+	"version": "1.0.0",
+	"description": "",
+	"main": "transpile/main/main.js",
+	"scripts": {
+		"dev:main": "npm run build:main && wait-on tcp:5173 && cross-env NODE_ENV=development /nix/store/skdkvwf3cpfsc19dr8gl820zman15n1c-electron-34.2.0/bin/electron .",
+		"dev:renderer": "vite",
+		"dev": "concurrently -k \"npm run dev:main\" \"npm run dev:renderer\"",
+		"build:main": "rimraf transpile/main && tsc -p tsconfig.main.json",
+		"build:renderer": "rimraf transpile/renderer && vite build",
+		"build:electron": "rimraf dist && electron-builder",
+		"build": "npm run build:main && npm run build:renderer && npm run build:electron"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"devDependencies": {
+		"@types/electron": "^1.4.38",
+		"@types/node": "^24.3.0",
+		"@types/react": "^19.1.10",
+		"@types/react-dom": "^19.1.7",
+		"@vitejs/plugin-react": "^5.0.0",
+		"concurrently": "^9.2.0",
+		"cross-env": "^10.0.0",
+		"electron": "^37.3.0",
+		"electron-builder": "^26.0.12",
+		"rimraf": "^6.0.1",
+		"tsx": "^4.20.4",
+		"typescript": "^5.9.2",
+		"vite": "^7.1.2",
+		"wait-on": "^8.0.4"
+	},
+	"build": {
+		"appId": "com.eyezah.consoleui",
+		"files": [
+			"transpile/**/*",
+			"package.json"
+		],
+		"linux": {
+			"target": "AppImage"
+		}
+	},
+	"dependencies": {
+		"react": "^19.1.1",
+		"react-dom": "^19.1.1"
+	}
+}
