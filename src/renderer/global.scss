@@ -1,0 +1,49 @@
+@font-face {
+	font-family: "Capitol City";
+	src: url(fonts/capitol_city/capitolcity.ttf);
+	font-style: normal;
+	font-weight: normal;
+}
+
+@font-face {
+	font-family: "Capitol City";
+	src: url(fonts/capitol_city/capitolcitybold.ttf);
+	font-style: normal;
+	font-weight: bold;
+}
+
+@font-face {
+	font-family: "Capitol City";
+	src: url(fonts/capitol_city/capitolcityital.ttf);
+	font-style: italic;
+	font-weight: normal;
+}
+
+:root {
+	--font-stylish-title:
+		"Capitol City", "Impact", "Haettenschweiler", "Arial Black", sans-serif;
+
+	--color-background: #02020a;
+	--color-section-background: #0b1b1b;
+
+	--color-text: #f2f2f2;
+	--color-accent1: #007a7a;
+	--color-accent1-faint: #004040;
+	--color-accent2: #7a0000;
+	--color-accent2-faint: #3d0000;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	background: var(--color-background);
+	color: var(--color-text);
+	margin: 0;
+}
+
+button {
+	color: var(--color-text);
+	border: none;
+}

@@ -1,14 +1,13 @@
 {
+	"extends": "./tsconfig.shared.json",
 	"compilerOptions": {
-		"target": "ES2020",
-		"module": "CommonJS",
 		"outDir": "transpile",
-		"strict": true,
-		"esModuleInterop": true,
-		"moduleResolution": "node",
-		"skipLibCheck": true,
-		"sourceMap": true,
-		"jsx": "react-jsx"
+		"jsx": "react-jsx",
+		"baseUrl": "./src/renderer",
+		"paths": {
+			"@component/*": ["components/*"],
+			"@interface/*": ["../shared/interface/*"]
+		}
 	},
 	"include": ["src/renderer/**/*"]
 }
