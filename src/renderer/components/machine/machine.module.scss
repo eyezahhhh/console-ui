@@ -1,0 +1,31 @@
+.container {
+	padding: 2px;
+	position: relative;
+	isolation: isolate;
+
+	.content {
+		width: 400px;
+		height: calc(400px / 1.61);
+		display: flex;
+		background: var(--color-section-background);
+
+		.title {
+			font-family: var(--font-stylish-title);
+			color: var(--color-text);
+			font-size: 3rem;
+			padding: 0 10px;
+		}
+	}
+
+	&::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(
+			90deg,
+			var(--color-accent1-faint) 0%,
+			var(--color-accent1) 100%
+		);
+		z-index: -1;
+	}
+}
