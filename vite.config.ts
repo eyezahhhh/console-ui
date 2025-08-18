@@ -16,4 +16,9 @@ export default defineConfig({
 		},
 	},
 	plugins: [react()],
+	resolve: {
+		alias: {
+			"@component": path.resolve(__dirname, "src/renderer/components"),
+		},
+	},
 });
