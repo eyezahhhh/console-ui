@@ -34,6 +34,7 @@
 		"tsx": "^4.20.4",
 		"typescript": "^5.9.2",
 		"vite": "^7.1.2",
+		"vite-plugin-svgr": "^4.3.0",
 		"wait-on": "^8.0.4"
 	},
 	"build": {
@@ -49,7 +50,8 @@
 	"dependencies": {
 		"command-exists": "^1.2.9",
 		"react": "^19.1.1",
-		"react-dom": "^19.1.1"
+		"react-dom": "^19.1.1",
+		"zustand": "^5.0.7"
 	},
 	"volta": {
 		"node": "22.18.0"

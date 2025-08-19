@@ -4,8 +4,7 @@
 		"outDir": "transpile",
 		"baseUrl": "./src/main",
 		"paths": {
-			"@interface/*": ["../shared/interface/*"],
-			"@logger/*": ["logger/*"]
+			"@interface/*": ["../shared/interface/*"]
 		}
 	},
 	"include": ["src/main/**/*", "src/shared/**/*"]

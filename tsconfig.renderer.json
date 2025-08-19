@@ -6,7 +6,12 @@
 		"baseUrl": "./src/renderer",
 		"paths": {
 			"@component/*": ["components/*"],
-			"@interface/*": ["../shared/interface/*"]
+			"@hook/*": ["hooks/*"],
+			"@state/*": ["state/*"],
+			"@util/*": ["utils/*"],
+			"@icon/*": ["icons/*"],
+			"@interface/*": ["../shared/interface/*"],
+			"@enum/*": ["../shared/enum/*"]
 		}
 	},
 	"include": ["src/renderer/**/*"]

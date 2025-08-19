@@ -1,5 +1,5 @@
-import { Logger } from "@logger";
 import commandExists from "command-exists";
+import { Logger } from "./logger";
 
 export class MoonlightEmbeddedController extends Logger {
 	private isEnabled = false;
@@ -13,7 +13,9 @@ export class MoonlightEmbeddedController extends Logger {
 		commandExists(command)
 			.then(() => {
 				this.isEnabled = true;
-				this.debug("Moonlight Embedded command exists.");
+				this.debug(
+					"Moonlight Embedded command exists, Moonlight functionality is enabled.",
+				);
 			})
 			.catch(() => {
 				this.warn(
