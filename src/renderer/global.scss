@@ -41,9 +41,14 @@ body {
 	background: var(--color-background);
 	color: var(--color-text);
 	margin: 0;
+	overflow: hidden;
 }
 
 button {
 	color: var(--color-text);
 	border: none;
+
+	&:focus {
+		outline: none;
+	}
 }
