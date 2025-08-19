@@ -1,7 +1,7 @@
 import { app, BrowserWindow } from "electron";
 import { MoonlightEmbeddedController } from "./moonlight-embedded-controller";
 import Path from "path";
-import { StandaloneLogger } from "@logger";
+import { StandaloneLogger } from "./logger";
 
 const logger = new StandaloneLogger("Main");
 
@@ -13,8 +13,6 @@ if (IS_DEV) {
 }
 
 const moonlight = new MoonlightEmbeddedController("moonlight-embedded");
-
-logger.error("Fail!!");
 
 function createWindow() {
 	const win = new BrowserWindow({
