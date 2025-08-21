@@ -42,8 +42,6 @@ export function NavList({
 				return;
 			}
 
-			console.log("My children:", children);
-
 			const getCenter = (rect: DOMRect) => {
 				return {
 					x: rect.x + rect.width / 2,
@@ -52,7 +50,6 @@ export function NavList({
 			};
 
 			const lastCenter = getCenter(lastRef.getBoundingClientRect());
-			console.log(lastCenter);
 
 			const childrenCenters = children.map((child) => {
 				const center = getCenter(child.ref.getBoundingClientRect());
@@ -64,7 +61,6 @@ export function NavList({
 				};
 			});
 			childrenCenters.sort((a, b) => a.distance - b.distance);
-			console.log(childrenCenters);
 			setFocusedFromParent(key, childrenCenters[0].child.index);
 		},
 	);
@@ -88,7 +84,6 @@ export function NavList({
 							setUnfocused(action);
 						}
 					} else {
-						console.log("VERTICAL MOVE", action, index);
 						if (action == MovementAction.UP && index > 0) {
 							setFocusedFromParent(key, index - 1);
 						} else if (
