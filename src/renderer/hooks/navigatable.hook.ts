@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import useFocusStore, { FocusedConnection } from "@state/focus.store";
 import MovementAction from "@enum/movement-action.enum";
+import useGamepads from "./gamepads.hook";
+import GamepadButtonId from "../../shared/enum/gamepad-button-id.enum";
 
 export default function useNavigatable<T extends HTMLElement>(
 	parentKey: {} | null,
@@ -12,6 +14,26 @@ export default function useNavigatable<T extends HTMLElement>(
 	const key = useMemo(() => ({}), []);
 	const { focusedComponent, registerElement, lastFocusedComponent } =
 		useFocusStore();
+	useGamepads({
+		onButtonPress(buttonId) {
+			if (key !== focusedComponent?.key) {
+				return;
+			}
+			const buttons: Partial<Record<GamepadButtonId, MovementAction>> = {
+				[GamepadButtonId.D_UP]: MovementAction.UP,
+				[GamepadButtonId.D_DOWN]: MovementAction.DOWN,
+				[GamepadButtonId.D_LEFT]: MovementAction.LEFT,
+				[GamepadButtonId.D_RIGHT]: MovementAction.RIGHT,
+				[GamepadButtonId.B]: MovementAction.BACK,
+				[GamepadButtonId.A]: MovementAction.ENTER,
+			};
+
+			const action = buttons[buttonId];
+			if (action) {
+				onMoveAction(action);
+			}
+		},
+	});
 
 	useEffect(() => {
 		if (!ref) {
@@ -42,7 +64,6 @@ export default function useNavigatable<T extends HTMLElement>(
 
 			const action = keys[event.key];
 			if (action) {
-				console.log(action);
 				event.preventDefault();
 				event.stopPropagation();
 				onMoveAction(action);

@@ -5,8 +5,8 @@
 	overflow: hidden;
 
 	&.focused {
-		.content {
-			background: red;
+		&::before {
+			left: -100%;
 		}
 	}
 
@@ -39,11 +39,5 @@
 		);
 		z-index: -1;
 		transition: left 0.15s;
-	}
-
-	&:focus {
-		&::before {
-			left: -100%;
-		}
 	}
 }

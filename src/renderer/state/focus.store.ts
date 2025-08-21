@@ -35,13 +35,10 @@ const useFocusStore = create<IFocusState>((set, get) => ({
 			index,
 			ref,
 		});
-		console.log(
-			`Registering component ${parentKey ? "with" : "without"} parent`,
-		);
 
 		return () => {
-			console.log("Deregistering component");
 			const connection = get().hooks.get(key);
+			get().hooks.delete(key);
 			if (get().focusedComponent?.key === key) {
 				if (connection?.parent) {
 					const parentConnection = get().hooks.get(connection.parent);
