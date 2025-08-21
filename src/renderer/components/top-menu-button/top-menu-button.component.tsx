@@ -2,7 +2,7 @@ import { JSX } from "react";
 import IFocusableProps from "../../../shared/interface/focusable-props.interface";
 import useNavigatable from "../../hooks/navigatable.hook";
 import { cc } from "../../utils/string.util";
-import styles from "./user-menu-button.module.scss";
+import styles from "./top-menu-button.module.scss";
 
 type Props = IFocusableProps & {
 	onClick?: () => void;
