@@ -10,6 +10,7 @@ type IMoonlightHostStatus = {
 			name: string;
 			codecs: SunshineCodec[];
 			httpsPort: number;
+			version: string;
 			type: "sunshine" | "gamestream";
 	  }
 	| {

@@ -3,6 +3,12 @@ import { Logger } from "./logger";
 import Bonjour from "bonjour";
 import MoonlightHost from "./moonlight-host";
 import IMoonlightHostStatus from "../shared/interface/moonlight-host-status.interface";
+import { readFile } from "fs";
+import path from "path";
+import { promisify } from "util";
+import os from "os";
+import crypto from "crypto";
+import Https from "https";
 
 export class MoonlightEmbeddedController extends Logger {
 	private _isEnabled = false;
@@ -42,7 +48,11 @@ export class MoonlightEmbeddedController extends Logger {
 							return;
 						}
 
-						const host = new MoonlightHost(service.addresses[0], service.port);
+						const host = new MoonlightHost(
+							service.addresses[0],
+							service.port,
+							this,
+						);
 						host.addListener((status) => {
 							const { address } = host.getAddress();
 							this.log(`Host ${address} updated its status:`, status);
@@ -50,6 +60,13 @@ export class MoonlightEmbeddedController extends Logger {
 						});
 						this.hosts.add(host);
 						this.hostsUpdated();
+
+						// todo: remove
+						setTimeout(() => {
+							host
+								.pair()
+								.catch((error) => this.warn("Host pair error:", error));
+						}, 2000);
 					},
 				);
 			})
@@ -75,5 +92,48 @@ export class MoonlightEmbeddedController extends Logger {
 
 	private hostsUpdated() {
 		this.log("Hosts have updated!");
+	}
+
+	private async findDirectory() {
+		return path.join(os.homedir(), ".cache", "moonlight");
+	}
+
+	async getUniqueId() {
+		return promisify(readFile)(
+			path.join(await this.findDirectory(), "uniqueid.dat"),
+			"utf-8",
+		);
+	}
+
+	async getPublicKey() {
+		const contents = await promisify(readFile)(
+			path.join(await this.findDirectory(), "client.pem"),
+		);
+		return contents;
+	}
+
+	private async getPrivateKey() {
+		return promisify(readFile)(
+			path.join(await this.findDirectory(), "key.pem"),
+			"utf-8",
+		);
+	}
+
+	async sign(blob: crypto.BinaryLike, algorithm: string) {
+		const key = await this.getPrivateKey();
+		const sign = crypto.createSign(algorithm);
+		sign.update(blob);
+		sign.end();
+		return sign.sign(key);
+	}
+
+	async createHttpsAgent(
+		options?: Omit<Omit<Https.AgentOptions, "key">, "cert">,
+	) {
+		return new Https.Agent({
+			...options,
+			key: await this.getPrivateKey(),
+			cert: await this.getPublicKey(),
+		});
 	}
 }

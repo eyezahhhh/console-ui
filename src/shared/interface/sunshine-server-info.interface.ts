@@ -1,7 +1,7 @@
 export default interface ISunshineServerInfo {
 	hostname: string;
 	appversion: string;
-	Gfeversion: string;
+	GfeVersion: string;
 	uniqueid: string;
 	HttpsPort: number;
 	externalPort: number;
