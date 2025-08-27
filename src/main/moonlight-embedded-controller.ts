@@ -2,19 +2,23 @@ import commandExists from "command-exists";
 import { Logger } from "./logger";
 import Bonjour from "bonjour";
 import MoonlightHost from "./moonlight-host";
-import IMoonlightHostStatus from "../shared/interface/moonlight-host-status.interface";
 import { readFile } from "fs";
 import path from "path";
 import { promisify } from "util";
 import os from "os";
 import crypto from "crypto";
 import Https from "https";
+import IMoonlightHostStatus from "@interface/moonlight-host-status.interface";
+import { IpcMain } from "./ipc";
 
 export class MoonlightEmbeddedController extends Logger {
 	private _isEnabled = false;
 	private readonly hosts = new Set<MoonlightHost>();
 
-	constructor(private readonly command: string) {
+	constructor(
+		private readonly command: string,
+		private readonly ipc: IpcMain,
+	) {
 		super();
 		this.log("Starting...");
 
@@ -52,6 +56,7 @@ export class MoonlightEmbeddedController extends Logger {
 							service.addresses[0],
 							service.port,
 							this,
+							this.ipc,
 						);
 						host.addListener((status) => {
 							const { address } = host.getAddress();
@@ -60,13 +65,6 @@ export class MoonlightEmbeddedController extends Logger {
 						});
 						this.hosts.add(host);
 						this.hostsUpdated();
-
-						// todo: remove
-						setTimeout(() => {
-							host
-								.pair()
-								.catch((error) => this.warn("Host pair error:", error));
-						}, 2000);
 					},
 				);
 			})
@@ -90,8 +88,18 @@ export class MoonlightEmbeddedController extends Logger {
 		return null;
 	}
 
+	getHosts() {
+		return Array.from(this.hosts);
+	}
+
+	getMachines() {
+		return this.getHosts()
+			.map((host) => host.asMachine())
+			.filter((machine) => !!machine);
+	}
+
 	private hostsUpdated() {
-		this.log("Hosts have updated!");
+		this.ipc.send("machines", this.getMachines());
 	}
 
 	private async findDirectory() {

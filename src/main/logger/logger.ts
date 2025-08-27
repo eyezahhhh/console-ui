@@ -40,18 +40,25 @@ export class Logger {
 				const index = l.indexOf("at ");
 				const clean = l.slice(index + 3, l.length - 1);
 
-				const [object, source] = clean.split(" (", 2);
-				const parts = source.split(":");
-				const column = parseInt(parts.pop()!);
-				const line = parseInt(parts.pop()!);
-				const path = parts.join(":");
-
 				return new LoggerStackTrace({
-					object,
-					path,
-					line,
-					column,
+					object: "",
+					path: "",
+					line: 0,
+					column: 0,
 				});
+
+				// const [object, source] = clean.split(" (", 2);
+				// const parts = source.split(":");
+				// const column = parseInt(parts.pop()!);
+				// const line = parseInt(parts.pop()!);
+				// const path = parts.join(":");
+
+				// return new LoggerStackTrace({
+				// 	object,
+				// 	path,
+				// 	line,
+				// 	column,
+				// });
 			});
 		}
 	}

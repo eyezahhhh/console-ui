@@ -1,7 +1,9 @@
 import { app, BrowserWindow } from "electron";
-import { MoonlightEmbeddedController } from "./moonlight-embedded-controller";
 import Path from "path";
 import { StandaloneLogger } from "./logger";
+import path from "path";
+import { MoonlightEmbeddedController } from "./moonlight-embedded-controller";
+import { IpcMain } from "./ipc";
 
 const logger = new StandaloneLogger("Main");
 
@@ -12,10 +14,20 @@ if (IS_DEV) {
 	logger.log("App is starting in production mode.");
 }
 
-const moonlight = new MoonlightEmbeddedController("moonlight-embedded");
+let getMoonlight: () => MoonlightEmbeddedController;
+
+const ipc = new IpcMain({
+	get_machines: async () => {
+		console.log("Getting machines...", getMoonlight().getMachines());
+		return getMoonlight().getMachines();
+	},
+});
+
+const moonlight = new MoonlightEmbeddedController("moonlight-embedded", ipc);
+getMoonlight = () => moonlight;
 
 function createWindow() {
-	const win = new BrowserWindow({
+	const window = new BrowserWindow({
 		width: 800,
 		height: 480,
 		fullscreen: false,
@@ -23,15 +35,17 @@ function createWindow() {
 		webPreferences: {
 			nodeIntegration: true,
 			devTools: IS_DEV,
+			preload: path.join(__dirname, "preload.js"),
 		},
 	});
+	ipc.setWindow(window);
 
 	if (IS_DEV) {
 		const url = "http://localhost:5173";
 		logger.log(`Loading window with URL`, url);
-		win.loadURL(url);
+		window.loadURL(url);
 	} else {
-		win.loadFile(Path.join(__dirname, "..", "renderer", "index.html"));
+		window.loadFile(Path.join(__dirname, "..", "renderer", "index.html"));
 	}
 }
 

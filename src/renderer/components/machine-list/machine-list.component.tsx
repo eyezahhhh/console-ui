@@ -1,13 +1,13 @@
-import useMachinesStore from "@state/machines.store";
 import Machine from "@component/machine";
 import styles from "./machine-list.module.scss";
 import NavList from "@component/nav-list";
 import IFocusableProps from "@interface/focusable-props.interface";
+import useMachines from "@hook/machines.hook";
 
 interface Props extends IFocusableProps {}
 
 export function MachineList({ setUnfocused, parentKey, index }: Props) {
-	const { machines } = useMachinesStore();
+	const machines = useMachines();
 
 	return (
 		<NavList
