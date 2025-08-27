@@ -1,0 +1,30 @@
+.top {
+	height: max(33vh, 200px);
+	background: #1b1b1b;
+	display: flex;
+	align-items: flex-end;
+	padding: 20px;
+
+	.title {
+		font-family: var(--font-stylish-title);
+		font-size: 3rem;
+		margin: 0;
+		text-shadow: 5px 5px 0 #000;
+		user-select: none;
+	}
+}
+
+.buttonRow {
+	display: flex;
+	margin: 10px;
+
+	.connectButton {
+		font-size: 2rem;
+		font-weight: bold;
+		padding: 10px;
+
+		&.focused {
+			background: var(--color-accent1);
+		}
+	}
+}

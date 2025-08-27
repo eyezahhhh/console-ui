@@ -12,10 +12,12 @@ pkgs.mkShell {
   ];
 
   shellHook = ''
+    export ELECTRON_BIN="${pkgs.electron}/bin/electron"
+  
     # Optional: fix locale warnings
-    export LC_ALL=en_US.UTF-8
-    export LANG=en_US.UTF-8
+    # export LC_ALL=en_US.UTF-8
+    # export LANG=en_US.UTF-8
 
-    echo "Electron dev environment ready. Run 'npm start' or 'npx electron .'"
+    # echo "Electron dev environment ready. Run 'npm start' or 'npx electron .'"
   '';
 }

@@ -1,11 +1,10 @@
 import { JSX } from "react";
-import IFocusableProps from "../../../shared/interface/focusable-props.interface";
-import useNavigatable from "../../hooks/navigatable.hook";
-import { cc } from "../../utils/string.util";
 import styles from "./top-menu-button.module.scss";
+import IFocusableProps from "@interface/focusable-props.interface";
+import Button from "@component/button";
 
 type Props = IFocusableProps & {
-	onClick?: () => void;
+	onEnter?: (key: {}) => void;
 } & (
 		| {
 				children: JSX.Element;
@@ -19,23 +18,23 @@ export function TopMenuButton({
 	parentKey,
 	setUnfocused,
 	index,
-	onClick,
+	onEnter,
 	...props
 }: Props) {
-	const { ref, isFocused } = useNavigatable(parentKey, index, setUnfocused);
-
 	return (
-		<button
-			className={cc(styles.button, isFocused && styles.focused)}
-			ref={ref}
+		<Button
+			parentKey={parentKey}
+			setUnfocused={setUnfocused}
+			index={index}
+			className={styles.button}
+			focusedClassName={styles.focused}
+			onEnter={onEnter}
 		>
-			<div className={styles.content}>
-				{"children" in props ? (
-					props.children
-				) : (
-					<div className={styles.icon}>{props.icon}</div>
-				)}
-			</div>
-		</button>
+			{"children" in props ? (
+				props.children
+			) : (
+				<div className={styles.icon}>{props.icon}</div>
+			)}
+		</Button>
 	);
 }

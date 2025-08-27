@@ -3,15 +3,20 @@
 	"compilerOptions": {
 		"outDir": "transpile",
 		"jsx": "react-jsx",
-		"baseUrl": "./src/renderer",
+		"baseUrl": "./src",
 		"paths": {
-			"@component/*": ["components/*"],
-			"@hook/*": ["hooks/*"],
-			"@state/*": ["state/*"],
-			"@util/*": ["utils/*"],
-			"@icon/*": ["icons/*"],
-			"@interface/*": ["../shared/interface/*"],
-			"@enum/*": ["../shared/enum/*"]
+			"@component/*": ["renderer/components/*"],
+			"@hook/*": ["renderer/hooks/*"],
+			"@state/*": ["renderer/state/*"],
+			"@icon/*": ["renderer/icons/*"],
+
+			"@/*": ["renderer/*"],
+
+			"@enum/*": ["shared/enum/*"],
+			"@interface/*": ["shared/interface/*"],
+			"@type/*": ["shared/type/*"],
+			"@util/*": ["shared/util/*"],
+			"@shared/*": ["shared/*"]
 		}
 	},
 	"include": ["src/renderer/**/*"]

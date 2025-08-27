@@ -3,12 +3,14 @@ import IFocusableProps from "@interface/focusable-props.interface";
 import OptionalArray from "@interface/optional-array.interface";
 import useNavigatable from "@hook/navigatable.hook";
 import MovementAction from "@enum/movement-action.enum";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import useFocusStore from "@state/focus.store";
 
 interface Props extends IFocusableProps {
 	direction: "horizontal" | "vertical";
-	children: OptionalArray<(props: IFocusableProps) => React.JSX.Element>;
+	children?: OptionalArray<
+		React.JSX.Element | ((props: IFocusableProps) => React.JSX.Element)
+	>;
 	className?: string;
 }
 
@@ -61,44 +63,53 @@ export function NavList({
 				};
 			});
 			childrenCenters.sort((a, b) => a.distance - b.distance);
-			setFocusedFromParent(key, childrenCenters[0].child.index);
+			if (childrenCenters.length) {
+				setFocusedFromParent(key, childrenCenters[0].child.index);
+			}
 		},
 	);
 	const { setFocusedFromParent, getChildrenOf } = useFocusStore();
 
-	const mappedChildren = useMemo(() => {
-		return toArray(children).map((child, index) => {
-			return child({
-				parentKey: key,
-				index,
-				setUnfocused: (action) => {
-					if (direction == "horizontal") {
-						if (action == MovementAction.LEFT && index > 0) {
-							setFocusedFromParent(key, index - 1);
-						} else if (
-							action == MovementAction.RIGHT &&
-							index < mappedChildren.length - 1
-						) {
-							setFocusedFromParent(key, index + 1);
-						} else {
-							setUnfocused(action);
-						}
+	let childIndexCounter = 0;
+	const mappedChildren = toArray(children || []).map((child) => {
+		if (typeof child != "function") {
+			return child;
+		}
+
+		const functionalChildrenCount = toArray(children || []).filter(
+			(child) => typeof child == "function",
+		).length;
+		const childIndex = childIndexCounter++;
+		return child({
+			parentKey: key,
+			index: childIndex,
+			setUnfocused: (action) => {
+				if (direction == "horizontal") {
+					if (action == MovementAction.LEFT && childIndex > 0) {
+						setFocusedFromParent(key, childIndex - 1);
+					} else if (
+						action == MovementAction.RIGHT &&
+						childIndex < functionalChildrenCount - 1
+					) {
+						setFocusedFromParent(key, childIndex + 1);
 					} else {
-						if (action == MovementAction.UP && index > 0) {
-							setFocusedFromParent(key, index - 1);
-						} else if (
-							action == MovementAction.DOWN &&
-							index < mappedChildren.length - 1
-						) {
-							setFocusedFromParent(key, index + 1);
-						} else {
-							setUnfocused(action);
-						}
+						setUnfocused(action);
 					}
-				},
-			});
+				} else {
+					if (action == MovementAction.UP && childIndex > 0) {
+						setFocusedFromParent(key, childIndex - 1);
+					} else if (
+						action == MovementAction.DOWN &&
+						childIndex < functionalChildrenCount - 1
+					) {
+						setFocusedFromParent(key, childIndex + 1);
+					} else {
+						setUnfocused(action);
+					}
+				}
+			},
 		});
-	}, [children]);
+	});
 
 	return (
 		<div className={className} ref={ref}>

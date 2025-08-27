@@ -6,6 +6,7 @@ enum MovementAction {
 	ENTER = "enter",
 	BACK = "back",
 	MENU = "menu",
+	OPTIONS = "options",
 }
 
 export default MovementAction;

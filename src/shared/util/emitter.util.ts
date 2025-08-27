@@ -1,13 +1,13 @@
-export default class Emitter<T extends Record<string, any[]>> {
+export class Emitter<T extends Record<string, any[]>> {
 	private readonly listeners = new Map<
 		string | number | symbol,
 		Set<(...args: any[]) => void>
 	>();
 
-	addEventListener<K extends keyof T>(
+	addEventListener = <K extends keyof T>(
 		event: K,
 		callback: (...args: T[K]) => void,
-	) {
+	) => {
 		const listeners = this.listeners.get(event);
 		if (listeners) {
 			listeners.add(callback);
@@ -15,12 +15,12 @@ export default class Emitter<T extends Record<string, any[]>> {
 			this.listeners.set(event, new Set([callback]));
 		}
 		return () => this.removeEventListener(event, callback);
-	}
+	};
 
-	removeEventListener<K extends keyof T>(
+	removeEventListener = <K extends keyof T>(
 		event: K,
 		callback: (...args: T[K]) => void,
-	) {
+	) => {
 		const listeners = this.listeners.get(event);
 		if (listeners) {
 			listeners.delete(callback);
@@ -28,7 +28,7 @@ export default class Emitter<T extends Record<string, any[]>> {
 				this.listeners.delete(event);
 			}
 		}
-	}
+	};
 
 	protected emit<K extends keyof T>(event: K, ...response: T[K]) {
 		const listeners = this.listeners.get(event);
@@ -37,5 +37,13 @@ export default class Emitter<T extends Record<string, any[]>> {
 				callback(...response);
 			}
 		}
+	}
+}
+
+export class StandaloneEmitter<
+	T extends Record<string, any[]>,
+> extends Emitter<T> {
+	public emit<K extends keyof T>(event: K, ...response: T[K]) {
+		super.emit(event, ...response);
 	}
 }

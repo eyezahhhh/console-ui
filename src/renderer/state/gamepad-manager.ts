@@ -1,5 +1,5 @@
 import GamepadButtonId from "@enum/gamepad-button-id.enum";
-import Emitter from "@util/emitter.util";
+import { Emitter } from "@util/emitter.util";
 
 interface GamepadState {
 	buttons: Map<GamepadButtonId, boolean>;
