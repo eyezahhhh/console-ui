@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import useFocusStore, { FocusedConnection } from "@state/focus.store";
+import useFocusStore, { Connection } from "@state/focus.store";
 import MovementAction from "@enum/movement-action.enum";
 import useGamepads from "./gamepads.hook";
 import GamepadButtonId from "../../shared/enum/gamepad-button-id.enum";
@@ -8,9 +8,10 @@ export default function useNavigatable<T extends HTMLElement>(
 	parentKey: {} | null,
 	index: number,
 	onMoveAction: (action: MovementAction) => void,
-	onFocus?: (fromComponent: FocusedConnection | null) => void,
+	onFocus?: (fromComponent: Connection | null) => void,
 ) {
 	const [ref, setRef] = useState<T | null>(null);
+	const [isRegistered, setIsRegistered] = useState(false);
 	const key = useMemo(() => ({}), []);
 	const { focusedComponent, registerElement, lastFocusedComponent } =
 		useFocusStore();
@@ -41,8 +42,10 @@ export default function useNavigatable<T extends HTMLElement>(
 		}
 
 		const deregister = registerElement(key, parentKey, index, ref);
+		setIsRegistered(true);
 
 		return () => {
+			setIsRegistered(false);
 			deregister();
 		};
 	}, [ref, key, parentKey, index]);
@@ -87,5 +90,7 @@ export default function useNavigatable<T extends HTMLElement>(
 		ref: setRef,
 		key,
 		isFocused: focusedComponent?.key === key,
+		isRegistered,
+		element: ref,
 	};
 }

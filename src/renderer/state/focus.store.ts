@@ -4,15 +4,12 @@ export type Connection = {
 	parent: {} | null;
 	index: number;
 	ref: HTMLElement;
-};
-
-export type FocusedConnection = Connection & {
 	key: {};
 };
 
 interface IFocusState {
-	focusedComponent: FocusedConnection | null;
-	lastFocusedComponent: FocusedConnection | null;
+	focusedComponent: Connection | null;
+	lastFocusedComponent: Connection | null;
 	readonly hooks: Map<{}, Connection>;
 	registerElement: (
 		key: {},
@@ -23,6 +20,7 @@ interface IFocusState {
 	setFocused: (key: {}) => void;
 	setFocusedFromParent: (parentKey: {}, index: number) => void;
 	getChildrenOf: (parentKey: {}) => Connection[];
+	isFocusedChildOf: (parentKey: {}) => boolean;
 }
 
 const useFocusStore = create<IFocusState>((set, get) => ({
@@ -34,6 +32,7 @@ const useFocusStore = create<IFocusState>((set, get) => ({
 			parent: parentKey,
 			index,
 			ref,
+			key,
 		});
 
 		return () => {
@@ -92,6 +91,23 @@ const useFocusStore = create<IFocusState>((set, get) => ({
 	getChildrenOf: (parentKey) => {
 		const all = Array.from(get().hooks.values());
 		return all.filter((connection) => connection.parent === parentKey);
+	},
+	isFocusedChildOf: (parentKey) => {
+		let component: Connection | null = get().focusedComponent;
+
+		while (component) {
+			if (component.key == parentKey) {
+				return true;
+			}
+			if (!component.parent) {
+				return false;
+			}
+			if (component.parent == parentKey) {
+				return true;
+			}
+			component = get().hooks.get(component.parent) || null;
+		}
+		return false;
 	},
 }));
 

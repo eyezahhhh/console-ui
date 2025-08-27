@@ -2,10 +2,20 @@
 	"extends": "./tsconfig.shared.json",
 	"compilerOptions": {
 		"outDir": "transpile",
-		"baseUrl": "./src/main",
 		"paths": {
-			"@interface/*": ["../shared/interface/*"]
-		}
+			"@/*": ["main/*"],
+
+			"@enum/*": ["shared/enum/*"],
+			"@interface/*": ["shared/interface/*"],
+			"@type/*": ["shared/type/*"],
+			"@util/*": ["shared/util/*"],
+			"@shared/*": ["shared/*"]
+		},
+		"plugins": [
+			{
+				"transform": "typescript-transform-paths"
+			}
+		]
 	},
 	"include": ["src/main/**/*", "src/shared/**/*"]
 }

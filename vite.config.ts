@@ -19,13 +19,17 @@ export default defineConfig({
 	plugins: [react(), svgr()],
 	resolve: {
 		alias: {
+			"@": path.resolve(__dirname, "src/renderer"),
 			"@component": path.resolve(__dirname, "src/renderer/components"),
 			"@hook": path.resolve(__dirname, "src/renderer/hooks"),
 			"@state": path.resolve(__dirname, "src/renderer/state"),
-			"@util": path.resolve(__dirname, "src/renderer/utils"),
 			"@icon": path.resolve(__dirname, "src/renderer/icons"),
-			"@interface": path.resolve(__dirname, "src/shared/interface"),
+
 			"@enum": path.resolve(__dirname, "src/shared/enum"),
+			"@interface": path.resolve(__dirname, "src/shared/interface"),
+			"@type": path.resolve(__dirname, "src/shared/type"),
+			"@util": path.resolve(__dirname, "src/shared/util"),
+			"@shared": path.resolve(__dirname, "src/shared"),
 		},
 	},
 });
