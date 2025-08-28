@@ -1,14 +1,23 @@
 {
+	"extends": "./tsconfig.shared.json",
 	"compilerOptions": {
-		"target": "ES2020",
-		"module": "CommonJS",
 		"outDir": "transpile",
-		"strict": true,
-		"esModuleInterop": true,
-		"moduleResolution": "node",
-		"skipLibCheck": true,
-		"sourceMap": true,
-		"jsx": "react-jsx"
+		"jsx": "react-jsx",
+		"baseUrl": "./src",
+		"paths": {
+			"@component/*": ["renderer/components/*"],
+			"@hook/*": ["renderer/hooks/*"],
+			"@state/*": ["renderer/state/*"],
+			"@icon/*": ["renderer/icons/*"],
+
+			"@/*": ["renderer/*"],
+
+			"@enum/*": ["shared/enum/*"],
+			"@interface/*": ["shared/interface/*"],
+			"@type/*": ["shared/type/*"],
+			"@util/*": ["shared/util/*"],
+			"@shared/*": ["shared/*"]
+		}
 	},
 	"include": ["src/renderer/**/*"]
 }
