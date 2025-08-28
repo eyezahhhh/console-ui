@@ -13,4 +13,5 @@ export default interface ISettings {
 	surroundSound: "none" | "5.1" | "7.1";
 	platform: MoonlightPlatform;
 	quitAppAfter: boolean;
+	startFullscreen: boolean;
 }
