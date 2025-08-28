@@ -8,7 +8,7 @@
 		"dev:renderer": "vite",
 		"dev": "concurrently -k \"npm run dev:main\" \"npm run dev:renderer\"",
 		"build:main": "rimraf transpile/main && rimraf transpile/shared && tsc -p tsconfig.main.json && tsc-alias -p tsconfig.main.json",
-		"build:renderer": "rimraf transpile/renderer && vite build",
+		"build:renderer": "rimraf transpile/renderer && tsc --noEmit -p tsconfig.renderer.json && vite build",
 		"build:electron": "rimraf dist && electron-builder",
 		"build": "npm run build:main && npm run build:renderer && npm run build:electron",
 		"format": "prettier src --write"
@@ -43,6 +43,7 @@
 		"appId": "com.eyezah.consoleui",
 		"files": [
 			"transpile/**/*",
+			"assets/**/*",
 			"package.json"
 		],
 		"linux": {

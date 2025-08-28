@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, ipcMain, Menu, Tray } from "electron";
 import Path from "path";
 import { StandaloneLogger } from "./logger";
 import path from "path";
@@ -16,37 +16,44 @@ if (IS_DEV) {
 
 let getMoonlight: () => MoonlightEmbeddedController;
 
-const ipc = new IpcMain({
-	get_machines: async () => {
-		console.log("Getting machines...", getMoonlight().getMachines());
-		return getMoonlight().getMachines();
+const ipc = new IpcMain(
+	{
+		get_machines: async () => {
+			return getMoonlight().getMachines();
+		},
 	},
-});
+	IS_DEV,
+);
 
 const moonlight = new MoonlightEmbeddedController("moonlight-embedded", ipc);
 getMoonlight = () => moonlight;
 
-function createWindow() {
-	const window = new BrowserWindow({
-		width: 800,
-		height: 480,
-		fullscreen: false,
-		// frame: false,
-		webPreferences: {
-			nodeIntegration: true,
-			devTools: IS_DEV,
-			preload: path.join(__dirname, "preload.js"),
+app.whenReady().then(() => {
+	ipc.getOrCreateWindow();
+
+	const tray = new Tray(path.join(__dirname, "..", "..", "assets", "tray.png"));
+	const contextMenu = Menu.buildFromTemplate([
+		{
+			label: "Show App",
+			click: () => {
+				logger.log("System tray as requested the app is shown");
+			},
 		},
-	});
-	ipc.setWindow(window);
+		{
+			label: "Quit",
+			click: () => {
+				app.quit();
+			},
+		},
+	]);
+	tray.setContextMenu(contextMenu);
+});
 
-	if (IS_DEV) {
-		const url = "http://localhost:5173";
-		logger.log(`Loading window with URL`, url);
-		window.loadURL(url);
-	} else {
-		window.loadFile(Path.join(__dirname, "..", "renderer", "index.html"));
+app.on("window-all-closed", () => {
+	if (!moonlight.isStreaming()) {
+		logger.log(
+			"All windows are closed and Moonlight isn't streaming, exiting.",
+		);
+		app.quit();
 	}
-}
-
-app.whenReady().then(createWindow);
+});

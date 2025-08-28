@@ -39,7 +39,7 @@ export function Button({
 }: Props) {
 	const move = (action: MovementAction) => {
 		if (action == MovementAction.ENTER) {
-			setFocused(key);
+			setFocused(key, action);
 		}
 
 		const callbacks: Record<MovementAction, ((key: {}) => void) | undefined> = {
@@ -70,7 +70,7 @@ export function Button({
 
 	useEffect(() => {
 		if (focusOnCreate && key && isRegistered) {
-			setFocused(key);
+			setFocused(key, MovementAction.ENTER);
 		}
 	}, [focusOnCreate, key, isRegistered]);
 

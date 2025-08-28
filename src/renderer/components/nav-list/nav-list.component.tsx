@@ -9,7 +9,7 @@ import useFocusStore from "@state/focus.store";
 interface Props extends IFocusableProps {
 	direction: "horizontal" | "vertical";
 	children?: OptionalArray<
-		React.JSX.Element | ((props: IFocusableProps) => React.JSX.Element)
+		false | React.JSX.Element | ((props: IFocusableProps) => React.JSX.Element)
 	>;
 	className?: string;
 }
@@ -28,11 +28,11 @@ export function NavList({
 		(action) => {
 			console.log("NAVLIST", action);
 		},
-		(lastComponent) => {
+		(lastComponent, action) => {
 			const lastRef = lastComponent?.ref;
 			if (!lastRef) {
 				// don't know what the last component was, select first component as fallback
-				setFocusedFromParent(key, 0);
+				setFocusedFromParent(key, 0, action);
 				return;
 			}
 
@@ -64,7 +64,9 @@ export function NavList({
 			});
 			childrenCenters.sort((a, b) => a.distance - b.distance);
 			if (childrenCenters.length) {
-				setFocusedFromParent(key, childrenCenters[0].child.index);
+				setFocusedFromParent(key, childrenCenters[0].child.index, action);
+			} else {
+				setUnfocused(action);
 			}
 		},
 	);
@@ -86,23 +88,23 @@ export function NavList({
 			setUnfocused: (action) => {
 				if (direction == "horizontal") {
 					if (action == MovementAction.LEFT && childIndex > 0) {
-						setFocusedFromParent(key, childIndex - 1);
+						setFocusedFromParent(key, childIndex - 1, action);
 					} else if (
 						action == MovementAction.RIGHT &&
 						childIndex < functionalChildrenCount - 1
 					) {
-						setFocusedFromParent(key, childIndex + 1);
+						setFocusedFromParent(key, childIndex + 1, action);
 					} else {
 						setUnfocused(action);
 					}
 				} else {
 					if (action == MovementAction.UP && childIndex > 0) {
-						setFocusedFromParent(key, childIndex - 1);
+						setFocusedFromParent(key, childIndex - 1, action);
 					} else if (
 						action == MovementAction.DOWN &&
 						childIndex < functionalChildrenCount - 1
 					) {
-						setFocusedFromParent(key, childIndex + 1);
+						setFocusedFromParent(key, childIndex + 1, action);
 					} else {
 						setUnfocused(action);
 					}

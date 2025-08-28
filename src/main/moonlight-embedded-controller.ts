@@ -1,5 +1,5 @@
 import commandExists from "command-exists";
-import { Logger } from "./logger";
+import { Logger, StandaloneLogger } from "./logger";
 import Bonjour from "bonjour";
 import MoonlightHost from "./moonlight-host";
 import { readFile } from "fs";
@@ -10,10 +10,13 @@ import crypto from "crypto";
 import Https from "https";
 import IMoonlightHostStatus from "@interface/moonlight-host-status.interface";
 import { IpcMain } from "./ipc";
+import ISunshineApp from "@interface/sunshine-app.interface";
+import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 
 export class MoonlightEmbeddedController extends Logger {
 	private _isEnabled = false;
 	private readonly hosts = new Set<MoonlightHost>();
+	private stream: ChildProcessWithoutNullStreams | null = null;
 
 	constructor(
 		private readonly command: string,
@@ -58,9 +61,7 @@ export class MoonlightEmbeddedController extends Logger {
 							this,
 							this.ipc,
 						);
-						host.addListener((status) => {
-							const { address } = host.getAddress();
-							this.log(`Host ${address} updated its status:`, status);
+						host.addEventListener("status", () => {
 							this.hostsUpdated();
 						});
 						this.hosts.add(host);
@@ -142,6 +143,58 @@ export class MoonlightEmbeddedController extends Logger {
 			...options,
 			key: await this.getPrivateKey(),
 			cert: await this.getPublicKey(),
+		});
+	}
+
+	isStreaming() {
+		return !!this.stream;
+	}
+
+	startStream(host: MoonlightHost, app: ISunshineApp) {
+		if (this.stream) {
+			throw new Error("Stream is already active");
+		}
+		return new Promise<void>((resolve) => {
+			const machine = host.asMachine();
+			const logger = new StandaloneLogger(
+				`Stream ${host.getAddress().address} - ${app.AppTitle}`,
+			);
+			logger.log("Starting child process.");
+
+			const child = spawn(
+				this.command,
+				["stream", host.getAddress().address, "-app", app.AppTitle],
+				{
+					stdio: [null, null, null],
+				},
+			);
+			this.stream = child;
+
+			child.on("spawn", () => {
+				logger.log("Spawned.");
+				const window = this.ipc.getWindow();
+				if (window) {
+					window.close();
+				}
+			});
+
+			child.on("exit", (code) => {
+				logger.log(`Exited with code ${code}.`);
+				if (this.stream == child) {
+					this.stream = null;
+				}
+				const url = machine ? `/machine/${machine.uuid}` : "/";
+				this.ipc.getOrCreateWindow(url).show();
+				resolve();
+			});
+
+			child.stdout.on("data", (message: Buffer) => {
+				logger.log("<LOG>", message.toString());
+			});
+
+			child.stderr.on("data", (message: Buffer) => {
+				logger.log("<LOG ERROR>", message.toString());
+			});
 		});
 	}
 }
