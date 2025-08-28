@@ -5,6 +5,7 @@ import TupleToFunctionAsync from "@type/tuple-to-function-async.type";
 import { StandaloneLogger } from "./logger";
 import { Emitter, StandaloneEmitter } from "@util/emitter.util";
 import RendererToMainListener from "@type/renderer-to-main-listener.type";
+import path from "path";
 
 type Transform<T extends Record<string, [any[], any]>> = {
 	[K in keyof T]: TupleToFunctionAsync<T[K]>;
@@ -16,7 +17,10 @@ export class IpcMain {
 	private readonly emitter = new StandaloneEmitter<RendererToMainListener>();
 	private readonly watchedEvents = new Set<keyof RendererToMainListener>();
 
-	constructor(private readonly handlers: Transform<MainToRendererHandler>) {
+	constructor(
+		private readonly handlers: Transform<MainToRendererHandler>,
+		private readonly isDev: boolean,
+	) {
 		for (let [channel, callback] of Object.entries(handlers)) {
 			this.logger.log(`Registered handler for channel "${channel}"`);
 			ipcMain.handle(channel, (event, ...args) => {
@@ -31,7 +35,6 @@ export class IpcMain {
 		...args: MainToRendererListener[T]
 	) {
 		if (this.window) {
-			this.logger.log("Sending event to renderer:", event);
 			this.window.webContents.send(event, ...args);
 		} else {
 			this.logger.log(
@@ -41,8 +44,40 @@ export class IpcMain {
 		}
 	}
 
-	setWindow(window: BrowserWindow | null) {
+	getOrCreateWindow(urlHash = "/") {
+		if (this.window) {
+			return this.window;
+		}
+
+		const window = new BrowserWindow({
+			width: 800,
+			height: 480,
+			fullscreen: false,
+			// frame: false,
+			webPreferences: {
+				nodeIntegration: true,
+				devTools: this.isDev,
+				preload: path.join(__dirname, "preload.js"),
+			},
+		});
 		this.window = window;
+
+		window.addListener("closed", () => {
+			this.logger.log("Window has closed.");
+			this.window = null;
+		});
+
+		if (this.isDev) {
+			const url = `http://localhost:5173#${urlHash}`;
+			this.logger.log(`Loading window with URL`, url);
+			window.loadURL(url);
+		} else {
+			window.loadFile(path.join(__dirname, "..", "renderer", "index.html"), {
+				hash: urlHash,
+			});
+		}
+
+		return window;
 	}
 
 	getWindow() {
@@ -59,7 +94,6 @@ export class IpcMain {
 			ipcMain.addListener(
 				event,
 				(_event, ...args: RendererToMainListener[K]) => {
-					this.logger.log("NEW EVENT", event, args);
 					this.emitter.emit(event, ...args);
 				},
 			);

@@ -48,9 +48,9 @@ export function Dropdown({
 
 	useEffect(() => {
 		if (isOpen) {
-			setFocusedFromParent(listKey, 0);
+			setFocusedFromParent(listKey, 0, MovementAction.ENTER); // todo: use real movement action
 		} else if (isFocusedChildOf(listKey)) {
-			setFocused(key);
+			setFocused(key, MovementAction.ENTER);
 		}
 	}, [isOpen, key]);
 
