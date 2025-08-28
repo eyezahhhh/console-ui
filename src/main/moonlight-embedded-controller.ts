@@ -29,9 +29,7 @@ export class MoonlightEmbeddedController extends Logger {
 
 		commandExists(command)
 			.then(() => this.generateKeys())
-			.then((data) => {
-				this.log(data);
-
+			.then(() => {
 				this._isEnabled = true;
 				this.debug(
 					"Moonlight Embedded command exists, Moonlight functionality is enabled.",

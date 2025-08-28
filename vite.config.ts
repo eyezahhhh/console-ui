@@ -29,6 +29,7 @@ export default defineConfig({
 			"@interface": path.resolve(__dirname, "src/shared/interface"),
 			"@type": path.resolve(__dirname, "src/shared/type"),
 			"@util": path.resolve(__dirname, "src/shared/util"),
+			"@const": path.resolve(__dirname, "src/shared/constant"),
 			"@shared": path.resolve(__dirname, "src/shared"),
 		},
 	},
