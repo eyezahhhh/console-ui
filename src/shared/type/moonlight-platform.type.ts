@@ -8,3 +8,4 @@ type MoonlightPlatform =
 	| "x11_vdpau"
 	| "sdl"
 	| "fake";
+export default MoonlightPlatform;
