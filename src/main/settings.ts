@@ -6,24 +6,12 @@ import { readFile, writeFile } from "fs";
 import path from "path";
 import { promisify } from "util";
 import { StandaloneLogger } from "./logger";
+import DEFAULT_SETTINGS from "@const/default-setting.const";
+import MOONLIGHT_CODECS from "@const/moonlight-codecs.const";
+import MOONLIGHT_PLATFORMS from "@const/moonlight-platforms.const";
 
 const readFileAsync = promisify(readFile);
 const writeFileAsync = promisify(writeFile);
-
-const DEFAULT_SETTINGS: ISettings = {
-	moonlightCommand: "moonlight",
-	resolution: [1280, 720],
-	rotation: 0,
-	fps: 60,
-	bitrate: 20,
-	packetSize: 100,
-	codec: "auto",
-	hdr: false,
-	remoteOptimizations: "auto",
-	surroundSound: "none",
-	platform: "auto",
-	quitAppAfter: false,
-};
 
 type Events = {
 	updated: [ISettings];
@@ -35,7 +23,6 @@ export default class Settings extends Emitter<Events> {
 
 	constructor() {
 		super();
-		this.read().catch((error) => this.logger.error(error));
 	}
 
 	private getPath() {
@@ -60,8 +47,9 @@ export default class Settings extends Emitter<Events> {
 		}
 	}
 
-	private async validateAndSet(settings: ISettings) {
+	async validateAndSet(settings: ISettings) {
 		try {
+			this.logger.log("Starting to validate settings.", settings);
 			const isNatural = (number: number) => {
 				return (
 					typeof number == "number" &&
@@ -72,9 +60,10 @@ export default class Settings extends Emitter<Events> {
 			};
 
 			if (
-				typeof settings.moonlightCommand ||
+				typeof settings.moonlightCommand != "string" ||
 				!settings.moonlightCommand.length
 			) {
+				this.logger.warn(`"moonlightCommand" invalid`);
 				return false;
 			}
 
@@ -83,31 +72,37 @@ export default class Settings extends Emitter<Events> {
 				settings.resolution.length != 2 ||
 				settings.resolution.some((num) => !isNatural(num))
 			) {
+				this.logger.warn(`"resolution" invalid`);
 				return false;
 			}
 
 			if (![0, 90, 180, 270].includes(settings.rotation)) {
+				this.logger.warn(`"rotation" invalid`);
 				return false;
 			}
 
 			if (!isNatural(settings.fps)) {
+				this.logger.warn(`"fps" invalid`);
 				return false;
 			}
 
 			if (!isNatural(settings.bitrate)) {
+				this.logger.warn(`"bitrate" invalid`);
 				return false;
 			}
 
 			if (!isNatural(settings.packetSize)) {
+				this.logger.warn(`"packetSize" invalid`);
 				return false;
 			}
 
-			const codecs: MoonlightCodec[] = ["auto", "av1", "h264", "h265"];
-			if (!codecs.includes(settings.codec)) {
+			if (!MOONLIGHT_CODECS.includes(settings.codec)) {
+				this.logger.warn(`"codec" invalid`);
 				return false;
 			}
 
 			if (typeof settings.hdr != "boolean") {
+				this.logger.warn(`"hdr" invalid`);
 				return false;
 			}
 
@@ -115,6 +110,7 @@ export default class Settings extends Emitter<Events> {
 				typeof settings.remoteOptimizations != "boolean" &&
 				settings.remoteOptimizations != "auto"
 			) {
+				this.logger.warn(`"remoteOptimizations" invalid`);
 				return false;
 			}
 
@@ -124,25 +120,22 @@ export default class Settings extends Emitter<Events> {
 				"7.1",
 			];
 			if (!surroundSound.includes(settings.surroundSound)) {
+				this.logger.warn(`"surroundSound" invalid`);
 				return false;
 			}
 
-			const platforms: MoonlightPlatform[] = [
-				"aml",
-				"auto",
-				"fake",
-				"imx",
-				"pi",
-				"rk",
-				"sdl",
-				"x11",
-				"x11_vdpau",
-			];
-			if (!platforms.includes(settings.platform)) {
+			if (!MOONLIGHT_PLATFORMS.includes(settings.platform)) {
+				this.logger.warn(`"platform" invalid`);
 				return false;
 			}
 
 			if (typeof settings.quitAppAfter != "boolean") {
+				this.logger.warn(`"quitAppAfter" invalid`);
+				return false;
+			}
+
+			if (typeof settings.startFullscreen != "boolean") {
+				this.logger.warn(`"startFullscreen" invalid`);
 				return false;
 			}
 
@@ -156,10 +149,15 @@ export default class Settings extends Emitter<Events> {
 			await writeFileAsync(this.getPath(), JSON.stringify(clone, null, 2));
 			this.settings = clone;
 			this.emit("updated", clone);
+			this.logger.log(`Saved settings. ${this.getPath()}`);
 			return true;
 		} catch (e) {
 			this.logger.error("Failed to save settings", e);
 			return false;
 		}
+	}
+
+	get() {
+		return structuredClone(this.settings);
 	}
 }

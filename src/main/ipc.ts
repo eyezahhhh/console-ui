@@ -6,6 +6,7 @@ import { StandaloneLogger } from "./logger";
 import { Emitter, StandaloneEmitter } from "@util/emitter.util";
 import RendererToMainListener from "@type/renderer-to-main-listener.type";
 import path from "path";
+import Settings from "./settings";
 
 type Transform<T extends Record<string, [any[], any]>> = {
 	[K in keyof T]: TupleToFunctionAsync<T[K]>;
@@ -20,6 +21,7 @@ export class IpcMain {
 	constructor(
 		private readonly handlers: Transform<MainToRendererHandler>,
 		private readonly isDev: boolean,
+		private readonly settings: Settings,
 	) {
 		for (let [channel, callback] of Object.entries(handlers)) {
 			this.logger.log(`Registered handler for channel "${channel}"`);
@@ -52,7 +54,7 @@ export class IpcMain {
 		const window = new BrowserWindow({
 			width: 800,
 			height: 480,
-			fullscreen: false,
+			fullscreen: this.settings.get().startFullscreen,
 			// frame: false,
 			webPreferences: {
 				nodeIntegration: true,
