@@ -4,21 +4,30 @@ import styles from "./index.module.scss";
 import { StrictMode, useMemo } from "react";
 import TopMenu from "./components/top-menu";
 import NavList from "@component/nav-list";
-import { HashRouter } from "react-router";
+import { HashRouter, useNavigate } from "react-router";
 import PageRouter from "@component/page-router";
 import HomePage from "./page/home";
 import MachinePage from "./page/machine";
 import SettingsPage from "./page/settings";
+import MovementAction from "@enum/movement-action.enum";
 
 function App() {
 	const key = useMemo(() => ({}), []);
+	const navigate = useNavigate();
 
 	return (
 		<div className={styles.container}>
 			<NavList
 				parentKey={key}
-				setUnfocused={() => {
-					console.log("Unfocus event propagated all the way to App component");
+				setUnfocused={(action) => {
+					if (action == MovementAction.BACK) {
+						// navigate(-1);
+						// todo: after navigating, focus a component
+					} else {
+						console.log(
+							"Unfocus event propagated all the way to App component",
+						);
+					}
 				}}
 				index={0}
 				direction="vertical"
