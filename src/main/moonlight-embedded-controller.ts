@@ -11,7 +11,7 @@ import Https from "https";
 import IMoonlightHostStatus from "@interface/moonlight-host-status.interface";
 import { IpcMain } from "./ipc";
 import ISunshineApp from "@interface/sunshine-app.interface";
-import { ChildProcessWithoutNullStreams, spawn } from "child_process";
+import { ChildProcessWithoutNullStreams, spawn, exec } from "child_process";
 
 export class MoonlightEmbeddedController extends Logger {
 	private _isEnabled = false;
@@ -28,7 +28,10 @@ export class MoonlightEmbeddedController extends Logger {
 		this.debug(`Using Moonlight Embedded command "${command}".`);
 
 		commandExists(command)
-			.then(() => {
+			.then(() => this.generateKeys())
+			.then((data) => {
+				this.log(data);
+
 				this._isEnabled = true;
 				this.debug(
 					"Moonlight Embedded command exists, Moonlight functionality is enabled.",
@@ -69,7 +72,8 @@ export class MoonlightEmbeddedController extends Logger {
 					},
 				);
 			})
-			.catch(() => {
+			.catch((e) => {
+				this.error(e);
 				this.warn(
 					`Moonlight Embedded command "${command}" wasn't found. Moonlight functionality is disabled.`,
 				);
@@ -97,6 +101,12 @@ export class MoonlightEmbeddedController extends Logger {
 		return this.getHosts()
 			.map((host) => host.asMachine())
 			.filter((machine) => !!machine);
+	}
+
+	private async generateKeys() {
+		try {
+			await promisify(exec)(`${this.command} pair 0`);
+		} catch {}
 	}
 
 	private hostsUpdated() {

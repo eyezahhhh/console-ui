@@ -21,6 +21,34 @@ export default function useGamepads({
 	onButtonRelease,
 }: Props = {}) {
 	const gamepadManager = useMemo(() => GamepadManager.getInstance(), []);
+	const [gamepads, setGamepads] = useState(
+		GamepadManager.getInstance().getGamepads(),
+	);
+
+	useEffect(() => {
+		const addListener = (gamepad: Gamepad) => {
+			setGamepads((gamepads) => {
+				if (gamepads.some((g) => g.index == gamepad.index)) {
+					return gamepads;
+				}
+				return [...gamepads, gamepad];
+			});
+		};
+
+		const removeListener = (gamepad: Gamepad) => {
+			setGamepads((gamepads) =>
+				gamepads.filter((g) => g.index != gamepad.index),
+			);
+		};
+
+		gamepadManager.addEventListener("added", addListener);
+		gamepadManager.addEventListener("removed", removeListener);
+
+		return () => {
+			gamepadManager.removeEventListener("added", addListener);
+			gamepadManager.removeEventListener("removed", removeListener);
+		};
+	}, [gamepadManager]);
 
 	useEffect(() => {
 		if (!onButtonChange) {
@@ -54,4 +82,6 @@ export default function useGamepads({
 			gamepadManager.removeEventListener("buttonreleased", onButtonRelease);
 		};
 	}, [gamepadManager, onButtonRelease]);
+
+	return gamepads;
 }
