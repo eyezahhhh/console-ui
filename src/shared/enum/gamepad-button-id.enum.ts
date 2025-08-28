@@ -1,0 +1,20 @@
+enum GamepadButtonId {
+	A = 0,
+	B = 1,
+	X = 2,
+	Y = 3,
+	LB = 4,
+	RB = 5,
+	LT = 6,
+	RT = 7,
+	SELECT = 8,
+	START = 9,
+	LS = 10,
+	RS = 11,
+	D_UP = 12,
+	D_DOWN = 13,
+	D_LEFT = 14,
+	D_RIGHT = 15,
+	HOME = 16,
+}
+export default GamepadButtonId;
