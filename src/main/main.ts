@@ -25,7 +25,7 @@ const ipc = new IpcMain(
 	IS_DEV,
 );
 
-const moonlight = new MoonlightEmbeddedController("moonlight-embedded", ipc);
+const moonlight = new MoonlightEmbeddedController("moonlight", ipc);
 getMoonlight = () => moonlight;
 
 app.whenReady().then(() => {
