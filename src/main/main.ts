@@ -1,5 +1,4 @@
-import { app, BrowserWindow, ipcMain, Menu, Tray } from "electron";
-import Path from "path";
+import { app, Menu, Tray } from "electron";
 import { StandaloneLogger } from "./logger";
 import path from "path";
 import { MoonlightEmbeddedController } from "./moonlight-embedded-controller";
