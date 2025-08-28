@@ -1,5 +1,4 @@
-import { app, BrowserWindow, ipcMain, Menu, Tray } from "electron";
-import Path from "path";
+import { app, Menu, Tray } from "electron";
 import { StandaloneLogger } from "./logger";
 import path from "path";
 import { MoonlightEmbeddedController } from "./moonlight-embedded-controller";
@@ -25,7 +24,7 @@ const ipc = new IpcMain(
 	IS_DEV,
 );
 
-const moonlight = new MoonlightEmbeddedController("moonlight", ipc);
+const moonlight = new MoonlightEmbeddedController("moonlight-embedded", ipc);
 getMoonlight = () => moonlight;
 
 app.whenReady().then(() => {
