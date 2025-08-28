@@ -1,4 +1,5 @@
 import MoonlightCodec from "@type/moonlight-codec.type";
+import MoonlightPlatform from "@type/moonlight-platform.type";
 
 export default interface ISettings {
 	moonlightCommand: string;

@@ -1,3 +1,5 @@
+import MoonlightPlatform from "@type/moonlight-platform.type";
+
 const MOONLIGHT_PLATFORMS: MoonlightPlatform[] = [
 	"auto",
 	"pi",
