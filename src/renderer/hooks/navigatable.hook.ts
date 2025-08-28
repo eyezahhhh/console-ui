@@ -8,13 +8,17 @@ export default function useNavigatable<T extends HTMLElement>(
 	parentKey: {} | null,
 	index: number,
 	onMoveAction: (action: MovementAction) => void,
-	onFocus?: (fromComponent: Connection | null) => void,
+	onFocus?: (fromComponent: Connection | null, action: MovementAction) => void,
 ) {
 	const [ref, setRef] = useState<T | null>(null);
 	const [isRegistered, setIsRegistered] = useState(false);
 	const key = useMemo(() => ({}), []);
-	const { focusedComponent, registerElement, lastFocusedComponent } =
-		useFocusStore();
+	const {
+		focusedComponent,
+		registerElement,
+		lastFocusedComponent,
+		lastAction,
+	} = useFocusStore();
 	useGamepads({
 		onButtonPress(buttonId) {
 			if (key !== focusedComponent?.key) {
@@ -82,9 +86,9 @@ export default function useNavigatable<T extends HTMLElement>(
 	useEffect(() => {
 		if (ref && focusedComponent?.key === key) {
 			ref.focus();
-			onFocus?.(lastFocusedComponent);
+			onFocus?.(lastFocusedComponent, lastAction);
 		}
-	}, [ref, focusedComponent, lastFocusedComponent, key, onFocus]);
+	}, [ref, focusedComponent, lastFocusedComponent, key, onFocus, lastAction]);
 
 	return {
 		ref: setRef,

@@ -1,10 +1,5 @@
 import { XMLParser } from "fast-xml-parser";
-import Axios, {
-	AxiosError,
-	AxiosInstance,
-	AxiosResponse,
-	CanceledError,
-} from "axios";
+import Axios, { AxiosInstance, AxiosResponse, CanceledError } from "axios";
 import { StandaloneLogger } from "./logger";
 import { MoonlightEmbeddedController } from "./moonlight-embedded-controller";
 import crypto from "crypto";
@@ -25,21 +20,29 @@ import IMoonlightClientPairingCheck from "@interface/moonlight-client-pairing-ch
 import { AgentOptions } from "https";
 import MachineState from "@enum/machine-state.enum";
 import { IpcMain } from "./ipc";
+import { Emitter } from "@util/emitter.util";
+import ISunshineApp from "@interface/sunshine-app.interface";
+import ISunshineAppList from "@interface/sunshine-app-list.interface";
 
-export default class MoonlightHost {
+type Events = {
+	status: [IMoonlightHostStatus];
+	apps: [ISunshineApp[]];
+};
+export default class MoonlightHost extends Emitter<Events> {
 	private readonly axios: AxiosInstance;
-	private secureAxios: AxiosInstance | null = null;
+	private isHttpsSupported = false;
 	private uuid: string | null = null;
 	private name: string | null = null;
 	private codecs: SunshineCodec[] = [];
 	private httpsPort: number | null = null;
 	private type: "sunshine" | "gamestream" | null = null;
 	private version: string | null = null;
-	private updateListeners = new Set<(status: IMoonlightHostStatus) => void>();
+	// private updateListeners = new Set<(status: IMoonlightHostStatus) => void>();
 	private infoFetchAbort: AbortController | null = null;
 	private logger: StandaloneLogger;
 	private diskData: IMoonlightHostDiskInfo | null = null;
 	private pairAbort: AbortController | null = null;
+	private apps: ISunshineApp[] = [];
 
 	constructor(
 		private readonly address: string,
@@ -47,6 +50,7 @@ export default class MoonlightHost {
 		private readonly controller: MoonlightEmbeddedController,
 		private readonly ipc: IpcMain,
 	) {
+		super();
 		this.axios = Axios.create({
 			baseURL: `http://${address}:${port}`,
 		});
@@ -55,46 +59,81 @@ export default class MoonlightHost {
 
 		this.fetchServerInfo().catch((error) => this.logger.error(error));
 
+		this.addEventListener("apps", () => {
+			this.emit("status", this.getStatus());
+		});
+
 		ipc.addEventListener("pair", (uuid) => {
 			if (!uuid || uuid != this.uuid) {
 				return;
 			}
 
-			this.logger.log("Received pairing request...");
-			this.pair().catch((error) => this.logger.error("Failed to pair", error));
+			if (this.isHttpsSupported) {
+				this.logger.log(
+					"Received pairing request but host is already paired, ignoring.",
+				);
+			} else {
+				this.logger.log("Received pairing request.");
+				this.pair().catch((error) =>
+					this.logger.error("Failed to pair", error),
+				);
+			}
+		});
+
+		ipc.addEventListener("stream", (uuid, appId) => {
+			if (!uuid || uuid != this.uuid) {
+				return;
+			}
+
+			const app = this.apps.find((app) => app.ID == appId);
+			if (!app) {
+				this.logger.log(
+					`Received request to stream app "${appId}" but it doesn't exist.`,
+				);
+				return;
+			}
+
+			this.logger.log(`Starting to stream app "${app.AppTitle}"`);
+			this.controller.startStream(this, app).then(() => {
+				this.logger.log("Stream has finished");
+			});
 		});
 	}
 
 	async fetchServerInfo(): Promise<void> {
-		if (this.infoFetchAbort) {
-			this.infoFetchAbort.abort();
-		}
+		const controller = new AbortController();
 
-		const oldStatus = this.getStatus();
-		const isSecure = !!this.secureAxios;
-
-		try {
-			const controller = new AbortController();
-
-			let response: AxiosResponse<any, any>;
-			if (isSecure) {
-				response = await this.secureAxios!.get("serverinfo", {
-					signal: controller.signal,
-				});
-			} else {
-				response = await this.axios.get("serverinfo", {
-					signal: controller.signal,
-				});
+		const fetch = async (
+			axiosFactory: () => AxiosInstance | Promise<AxiosInstance>,
+			secure: boolean,
+		) => {
+			const createAxios = () => Promise.resolve(axiosFactory());
+			if (this.infoFetchAbort) {
+				this.infoFetchAbort.abort();
 			}
+
+			const oldStatus = this.getStatus();
+
+			const response = await createAxios().then((axios) =>
+				axios.get("serverinfo", {
+					signal: controller.signal,
+				}),
+			);
 
 			if (response.status != 200) {
 				throw new Error(`/serverinfo response status was ${response.status}`);
 			}
 
-			const parser = new XMLParser();
+			const parser = new XMLParser({
+				ignoreAttributes: false,
+			});
 			const { root: xml } = parser.parse(response.data) as {
 				root: ISunshineServerInfo;
 			};
+
+			if (xml["@_status_code"] != "200") {
+				throw new Error("HTTPS is unauthorized");
+			}
 
 			const codecs: SunshineCodec[] = [];
 			const codecBits: Record<SunshineCodec, number> = {
@@ -124,43 +163,102 @@ export default class MoonlightHost {
 
 			if (isNewUuid) {
 				try {
-					await this.readInfo();
+					await this.restoreInfo();
 					this.logger.log("Loaded data from disk");
 				} catch {}
 			}
 
-			if (JSON.stringify(oldStatus) != JSON.stringify(this.getStatus())) {
-				this.emitUpdate();
+			if (secure) {
+				const uniqueId = await this.controller.getUniqueId();
+				const response = await createAxios().then((axios) =>
+					axios.get("applist", {
+						params: new URLSearchParams({
+							uniqueid: uniqueId,
+							uuid: this.randomUUID(),
+						}),
+					}),
+				);
+
+				const { root: xml } = parser.parse(response.data) as {
+					root: ISunshineAppList;
+				};
+				this.apps = xml.App;
+				this.emit("apps", this.apps);
+
+				if (xml["@_status_code"] != "200") {
+					throw new Error("HTTPS is unauthorized");
+				}
 			}
 
-			if (!isSecure) {
+			if (JSON.stringify(oldStatus) != JSON.stringify(this.getStatus())) {
+				this.emit("status", this.getStatus());
+			}
+		};
+
+		if (this.isHttpsSupported) {
+			try {
 				this.logger.log(
-					"Host is definitely online. Elevating to HTTPS to identify pairing status",
+					"Checking if host continues to support secure connections.",
 				);
-				this.secureAxios = await this.createSecureAxios();
-				return this.fetchServerInfo();
-			} else {
-				const timeout = setTimeout(() => {
-					// queue up next info request
-					if (!controller.signal.aborted) {
-						this.fetchServerInfo().catch((error) => this.logger.error(error));
+				await fetch(() => this.createSecureAxios(), true);
+				this.logger.log(
+					"Secure connections are still supported, host is still paired.",
+				);
+			} catch (e) {
+				if (e instanceof CanceledError) {
+					return;
+				}
+				this.logger.log(
+					e,
+					"Insecure connections are no longer supported, host is unpaired or offline.",
+				);
+				this.isHttpsSupported = false;
+				this.emit("status", this.getStatus());
+			}
+		} else {
+			try {
+				this.logger.log("Establishing insecure connection.");
+				await fetch(() => this.axios, false);
+				this.logger.log(
+					"Insecure connection established, attempting secure connection.",
+				);
+
+				try {
+					await fetch(() => this.createSecureAxios(), true);
+					this.isHttpsSupported = true;
+					this.logger.log("Secure connection established, host is paired.");
+					this.emit("status", this.getStatus());
+				} catch (e) {
+					if (e instanceof CanceledError) {
+						return;
 					}
-				}, 10_000);
-				controller.signal.addEventListener("abort", () => {
-					clearTimeout(timeout);
-				});
+					this.logger.log(
+						"Failed to establish secure connection, host isn't paired.",
+					);
+				}
+			} catch (e) {
+				if (e instanceof CanceledError) {
+					return;
+				}
+				this.isHttpsSupported = false; // connection failed, use insecure next time we attempt to connect
+				this.name = null; // missing name means host is offline
+				this.emit("status", this.getStatus());
+				this.logger.log(
+					"Couldn't establish insecure connection, host is offline or inaccessable.",
+				);
 			}
-		} catch (e) {
-			if (e instanceof CanceledError) {
-				return;
-			}
-			if (isSecure) {
-				this.logger.log("Secure failed.");
-			} else {
-				this.name = null;
-				this.emitUpdate();
-				throw e;
-			}
+		}
+
+		if (!controller.signal.aborted) {
+			this.logger.log("Queueing next identification request.");
+
+			const timeout = setTimeout(() => {
+				this.fetchServerInfo();
+			}, 10_000);
+
+			controller.signal.addEventListener("abort", () => {
+				clearTimeout(timeout);
+			});
 		}
 	}
 
@@ -194,6 +292,9 @@ export default class MoonlightHost {
 		if (this.pairAbort) {
 			state = MachineState.PAIRING;
 		}
+		if (this.isHttpsSupported) {
+			state = MachineState.PAIRED;
+		}
 
 		return {
 			uuid: this.uuid,
@@ -201,23 +302,8 @@ export default class MoonlightHost {
 			name: this.name || undefined,
 			state,
 			type: this.type || undefined,
+			apps: this.apps,
 		};
-	}
-
-	private emitUpdate() {
-		console.log("Updated!!!", this.getStatus());
-		for (let listener of this.updateListeners) {
-			listener(this.getStatus());
-		}
-	}
-
-	addListener(listener: (status: IMoonlightHostStatus) => void) {
-		this.updateListeners.add(listener);
-		return () => this.removeListener(listener);
-	}
-
-	removeListener(listener: (status: IMoonlightHostStatus) => void) {
-		this.updateListeners.delete(listener);
 	}
 
 	getAddress() {
@@ -249,8 +335,7 @@ export default class MoonlightHost {
 
 	private async saveInfo(data: IMoonlightHostDiskInfo) {
 		const storageFile = this.getStorageFile();
-		console.log(storageFile);
-		this.logger.log("Saving info to disk...");
+		this.logger.log(`Saving info to disk... (${storageFile})`);
 		this.diskData = data;
 
 		await promisify(mkdir)(this.getStorageDir(), {
@@ -259,7 +344,7 @@ export default class MoonlightHost {
 		await promisify(writeFile)(storageFile, JSON.stringify(data, null, 2));
 	}
 
-	private async readInfo() {
+	private async restoreInfo() {
 		const storageFile = this.getStorageFile();
 		this.logger.log("Reading info from disk...");
 		const data = await promisify(readFile)(storageFile);
@@ -269,12 +354,15 @@ export default class MoonlightHost {
 	}
 
 	async pair() {
+		if (this.infoFetchAbort) {
+			this.infoFetchAbort.abort();
+		}
 		const controller = new AbortController();
 		try {
 			if (this.pairAbort) {
 				this.pairAbort.abort();
 				this.pairAbort = null;
-				this.emitUpdate();
+				this.emit("status", this.getStatus());
 			}
 			if (!this.version) {
 				throw new Error("Server version unknown");
@@ -286,7 +374,7 @@ export default class MoonlightHost {
 			);
 
 			this.pairAbort = controller;
-			this.emitUpdate();
+			this.emit("status", this.getStatus());
 
 			const publicKey = await this.controller.getPublicKey();
 			const uniqueId = await this.controller.getUniqueId();
@@ -487,7 +575,7 @@ export default class MoonlightHost {
 			}
 
 			this.logger.log("Paired successfully");
-			this.secureAxios = secureAxios;
+			this.isHttpsSupported = true;
 
 			await this.saveInfo({
 				serverCert: serverCert.toString("base64"),
@@ -500,34 +588,45 @@ export default class MoonlightHost {
 		} catch (e) {
 			if (this.pairAbort == controller) {
 				this.pairAbort = null;
-				this.emitUpdate();
+				this.emit("status", this.getStatus());
 			}
 			if (e instanceof CanceledError) {
 				return;
 			}
 			throw e;
+		} finally {
+			this.fetchServerInfo();
 		}
 	}
 
 	private async createSecureAxios(
 		httpsOptions?: Omit<Omit<AgentOptions, "key">, "cert">,
 	) {
-		if (!this.diskData) {
-			try {
-				await this.readInfo();
-			} catch (e) {
-				throw new Error(
-					"Cannot create secure Axios instance because server certificate is not available.",
-				);
+		let serverCert:
+			| string
+			| Buffer<ArrayBufferLike>
+			| (string | Buffer<ArrayBufferLike>)[];
+		if (httpsOptions?.ca) {
+			serverCert = httpsOptions.ca;
+		} else {
+			if (!this.diskData) {
+				try {
+					await this.restoreInfo();
+				} catch (e) {
+					throw new Error(
+						"Cannot create secure Axios instance because server certificate is not available.",
+					);
+				}
 			}
+
+			serverCert = Buffer.from(this.diskData!.serverCert, "base64");
 		}
+
 		if (!this.httpsPort) {
 			throw new Error(
 				"Cannot create secure Axios instance because HTTPS port is unknown.",
 			);
 		}
-
-		const serverCert = Buffer.from(this.diskData!.serverCert, "base64");
 
 		const httpsAgent = await this.controller.createHttpsAgent({
 			ca: serverCert,
@@ -542,7 +641,7 @@ export default class MoonlightHost {
 	}
 
 	public isPaired() {
-		return !!this.secureAxios;
+		return this.isHttpsSupported;
 	}
 
 	async unpair() {

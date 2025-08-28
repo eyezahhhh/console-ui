@@ -41,11 +41,11 @@ export function Modal({ open, children, onClose }: Props) {
 	useEffect(() => {
 		if (open) {
 			const lastFocused = useFocusStore.getState().focusedComponent;
-			setFocusedFromParent(key, 0);
+			setFocusedFromParent(key, 0, MovementAction.ENTER);
 
 			return () => {
 				if (lastFocused) {
-					setFocused(lastFocused.key);
+					setFocused(lastFocused.key, MovementAction.ENTER);
 				}
 			};
 		}

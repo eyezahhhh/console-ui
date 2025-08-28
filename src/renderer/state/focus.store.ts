@@ -1,3 +1,4 @@
+import MovementAction from "@enum/movement-action.enum";
 import { create } from "zustand";
 
 export type Connection = {
@@ -10,6 +11,7 @@ export type Connection = {
 interface IFocusState {
 	focusedComponent: Connection | null;
 	lastFocusedComponent: Connection | null;
+	lastAction: MovementAction;
 	readonly hooks: Map<{}, Connection>;
 	registerElement: (
 		key: {},
@@ -17,8 +19,12 @@ interface IFocusState {
 		index: number,
 		ref: HTMLElement,
 	) => () => void;
-	setFocused: (key: {}) => void;
-	setFocusedFromParent: (parentKey: {}, index: number) => void;
+	setFocused: (key: {}, action: MovementAction) => void;
+	setFocusedFromParent: (
+		parentKey: {},
+		index: number,
+		action: MovementAction,
+	) => void;
 	getChildrenOf: (parentKey: {}) => Connection[];
 	isFocusedChildOf: (parentKey: {}) => boolean;
 }
@@ -26,6 +32,7 @@ interface IFocusState {
 const useFocusStore = create<IFocusState>((set, get) => ({
 	focusedComponent: null,
 	lastFocusedComponent: null,
+	lastAction: MovementAction.ENTER,
 	hooks: new Map(),
 	registerElement: (key, parentKey, index, ref) => {
 		get().hooks.set(key, {
@@ -54,7 +61,7 @@ const useFocusStore = create<IFocusState>((set, get) => ({
 			}
 		};
 	},
-	setFocused: (key) => {
+	setFocused: (key, action) => {
 		const connection = get().hooks.get(key);
 		if (!connection) {
 			console.error(`Failed to find and focus component`);
@@ -67,9 +74,10 @@ const useFocusStore = create<IFocusState>((set, get) => ({
 				...connection,
 				key,
 			},
+			lastAction: action,
 		}));
 	},
-	setFocusedFromParent: (parentKey, index) => {
+	setFocusedFromParent: (parentKey, index, action) => {
 		const connections = Array.from(get().hooks.entries());
 		const connectionInfo = connections.find(
 			([_key, connection]) =>
@@ -86,6 +94,7 @@ const useFocusStore = create<IFocusState>((set, get) => ({
 				...connectionInfo[1],
 				key: connectionInfo[0],
 			},
+			lastAction: action,
 		}));
 	},
 	getChildrenOf: (parentKey) => {
