@@ -1,0 +1,115 @@
+@font-face {
+	font-family: "Capitol City";
+	src: url(fonts/capitol-city/capitol-city.ttf);
+	font-style: normal;
+	font-weight: normal;
+}
+
+@font-face {
+	font-family: "Capitol City";
+	src: url(fonts/capitol-city/capitol-city_bold.ttf);
+	font-style: normal;
+	font-weight: bold;
+}
+
+@font-face {
+	font-family: "Capitol City";
+	src: url(fonts/capitol-city/capitol-city_italic.ttf);
+	font-style: italic;
+	font-weight: normal;
+}
+
+@font-face {
+	font-family: "Sansation";
+	src: url(fonts/sansation/sansation.ttf);
+	font-style: normal;
+	font-weight: normal;
+}
+
+@font-face {
+	font-family: "Sansation";
+	src: url(fonts/sansation/sansation_bold.ttf);
+	font-style: normal;
+	font-weight: bold;
+}
+
+@font-face {
+	font-family: "Sansation";
+	src: url(fonts/sansation/sansation_bolditalic.ttf);
+	font-style: italic;
+	font-weight: bold;
+}
+
+@font-face {
+	font-family: "Sansation";
+	src: url(fonts/sansation/sansation_italic.ttf);
+	font-style: italic;
+	font-weight: normal;
+}
+
+@font-face {
+	font-family: "Sansation";
+	src: url(fonts/sansation/sansation_light.ttf);
+	font-style: normal;
+	font-weight: lighter;
+}
+
+@font-face {
+	font-family: "Sansation";
+	src: url(fonts/sansation/sansation_lightitalic.ttf);
+	font-style: italic;
+	font-weight: lighter;
+}
+
+:root {
+	--font-stylish-title:
+		"Capitol City", "Impact", "Haettenschweiler", "Arial Black", sans-serif;
+	--font-normal: "Sansation", "Arial", sans-serif;
+
+	--color-background: #02020a;
+	--color-section-background: #0b1b1b;
+
+	--color-text: #f2f2f2;
+	--color-accent1: #007a7a;
+	--color-accent1-faint: #004040;
+	--color-accent2: #7a0000;
+	--color-accent2-faint: #3d0000;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	background: var(--color-background);
+	color: var(--color-text);
+	font-family: var(--font-normal);
+	margin: 0;
+	overflow: hidden;
+}
+
+button {
+	color: var(--color-text);
+	background: var(--color-accent1-faint);
+	font-family: var(--font-normal);
+	border: none;
+	user-select: none;
+	cursor: pointer;
+	font-size: 2rem;
+
+	&:focus {
+		outline: none;
+	}
+
+	&.focused {
+		background: var(--color-accent1);
+	}
+}
+
+input {
+	font-family: var(--font-normal);
+
+	&:focus {
+		outline: none;
+	}
+}

@@ -1,0 +1,31 @@
+.button {
+	display: block;
+	background: transparent;
+	height: 60px;
+	width: 60px;
+	padding: 2px;
+	cursor: pointer;
+
+	.content {
+		background: var(--color-accent1-faint);
+		height: 100%;
+		position: relative;
+
+		.icon {
+			position: absolute;
+			inset: 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+
+			svg {
+				width: 80%;
+				height: 80%;
+			}
+		}
+	}
+
+	&.focused {
+		background: var(--color-accent1);
+	}
+}
