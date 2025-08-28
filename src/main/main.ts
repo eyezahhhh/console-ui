@@ -3,6 +3,7 @@ import { StandaloneLogger } from "./logger";
 import path from "path";
 import { MoonlightEmbeddedController } from "./moonlight-embedded-controller";
 import { IpcMain } from "./ipc";
+import Settings from "./settings";
 
 const logger = new StandaloneLogger("Main");
 
@@ -13,21 +14,33 @@ if (IS_DEV) {
 	logger.log("App is starting in production mode.");
 }
 
-let getMoonlight: () => MoonlightEmbeddedController;
+const settings = new Settings();
 
-const ipc = new IpcMain(
-	{
-		get_machines: async () => {
-			return getMoonlight().getMachines();
+Promise.all([app.whenReady(), settings.read()]).then(() => {
+	let getMoonlight: () => MoonlightEmbeddedController;
+
+	const ipc = new IpcMain(
+		{
+			get_machines: async () => {
+				return getMoonlight().getMachines();
+			},
+			get_settings: () => settings.get(),
+			save_settings: (newSettings) => settings.validateAndSet(newSettings),
 		},
-	},
-	IS_DEV,
-);
+		IS_DEV,
+		settings,
+	);
 
-const moonlight = new MoonlightEmbeddedController("moonlight-embedded", ipc);
-getMoonlight = () => moonlight;
+	settings.addEventListener("updated", (settings) =>
+		ipc.send("settings", settings),
+	);
 
-app.whenReady().then(() => {
+	const moonlight = new MoonlightEmbeddedController(
+		settings.get().moonlightCommand,
+		ipc,
+	);
+	getMoonlight = () => moonlight;
+
 	ipc.getOrCreateWindow();
 
 	const tray = new Tray(path.join(__dirname, "..", "..", "assets", "tray.png"));
@@ -46,13 +59,13 @@ app.whenReady().then(() => {
 		},
 	]);
 	tray.setContextMenu(contextMenu);
-});
 
-app.on("window-all-closed", () => {
-	if (!moonlight.isStreaming()) {
-		logger.log(
-			"All windows are closed and Moonlight isn't streaming, exiting.",
-		);
-		app.quit();
-	}
+	app.on("window-all-closed", () => {
+		if (!moonlight.isStreaming()) {
+			logger.log(
+				"All windows are closed and Moonlight isn't streaming, exiting.",
+			);
+			app.quit();
+		}
+	});
 });
