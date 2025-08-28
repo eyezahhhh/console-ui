@@ -16,6 +16,7 @@
 			"@interface/*": ["shared/interface/*"],
 			"@type/*": ["shared/type/*"],
 			"@util/*": ["shared/util/*"],
+			"@const/*": ["shared/constant/*"],
 			"@shared/*": ["shared/*"]
 		}
 	},
