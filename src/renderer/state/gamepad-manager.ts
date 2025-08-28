@@ -9,6 +9,8 @@ type GamepadManagerEvents = {
 	buttonpressed: [GamepadButtonId, number]; // button id, controller index
 	buttonreleased: [GamepadButtonId, number]; // button id, controller index
 	buttonchanged: [GamepadButtonId, boolean, number]; // button id, button pressed, controller index
+	added: [Gamepad]; // gamepad
+	removed: [Gamepad]; // gamepad
 };
 
 export class GamepadManager extends Emitter<GamepadManagerEvents> {
@@ -37,11 +39,13 @@ export class GamepadManager extends Emitter<GamepadManagerEvents> {
 				event.gamepad.index,
 				this.getGamepadState(event.gamepad),
 			);
+			this.emit("added", event.gamepad);
 		});
 
 		window.addEventListener("gamepaddisconnected", (event) => {
 			console.log("Unloaded gamepad");
 			this.gamepadStates.delete(event.gamepad.index);
+			this.emit("removed", event.gamepad);
 		});
 
 		const frame = () => {
@@ -71,7 +75,7 @@ export class GamepadManager extends Emitter<GamepadManagerEvents> {
 		frame();
 	}
 
-	private getGamepads() {
+	getGamepads() {
 		return navigator.getGamepads().filter((gamepad) => !!gamepad);
 	}
 

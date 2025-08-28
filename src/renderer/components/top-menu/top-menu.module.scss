@@ -1,8 +1,18 @@
 .container {
 	background: var(--color-section-background);
 	display: flex;
+	justify-content: space-between;
 	height: 68px;
-	justify-content: flex-end;
-	align-items: center;
-	gap: 4px;
+
+	.gamepadsContainer {
+		display: flex;
+		gap: 4px;
+		align-items: center;
+	}
+
+	.buttonsContainer {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+	}
 }
