@@ -9,8 +9,8 @@ import PageRouter from "@component/page-router";
 import HomePage from "./page/home";
 import MachinePage from "./page/machine";
 import SettingsPage from "./page/settings";
-import MovementAction from "@enum/movement-action.enum";
 import GamepadDebugPage from "./page/gamepad-debug";
+import MovementAction from "@enum/movement-action.enum";
 
 function App() {
 	const key = useMemo(() => ({}), []);
