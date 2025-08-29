@@ -2,7 +2,7 @@ import commandExists from "command-exists";
 import { Logger, StandaloneLogger } from "./logger";
 import Bonjour from "bonjour";
 import MoonlightHost from "./moonlight-host";
-import { readFile } from "fs";
+import { readdir, readFile } from "fs";
 import path from "path";
 import { promisify } from "util";
 import os from "os";
@@ -35,6 +35,29 @@ export class MoonlightEmbeddedController extends Logger {
 					"Moonlight Embedded command exists, Moonlight functionality is enabled.",
 				);
 
+				promisify(readdir)(MoonlightHost.getStorageDir())
+					.then(async (files) => {
+						for (let file of files) {
+							if (!file.endsWith(".json")) {
+								continue;
+							}
+							try {
+								await MoonlightHost.fromUuid(
+									file.substring(0, file.length - 5),
+									this,
+								);
+							} catch (e) {
+								this.error(
+									`Failed to create Moonlight host for file "${file}":`,
+									e,
+								);
+							}
+						}
+					})
+					.catch((error) =>
+						this.error("Failed to scan for existing Moonlight hosts:", error),
+					);
+
 				const discovery = Bonjour().find(
 					{
 						type: "nvstream",
@@ -45,28 +68,11 @@ export class MoonlightEmbeddedController extends Logger {
 							service,
 						);
 
-						const existingHost = this.findHost(
-							(status) =>
-								status.address == service.addresses[0] &&
-								status.port == service.port,
-						);
-
-						if (existingHost) {
-							this.log(`Host was detected and instantiated.`);
-							return;
+						try {
+							this.addHost(service.addresses[0], service.port);
+						} catch (e) {
+							this.error(e);
 						}
-
-						const host = new MoonlightHost(
-							service.addresses[0],
-							service.port,
-							this,
-							this.ipc,
-						);
-						host.addEventListener("status", () => {
-							this.hostsUpdated();
-						});
-						this.hosts.add(host);
-						this.hostsUpdated();
 					},
 				);
 			})
@@ -76,6 +82,22 @@ export class MoonlightEmbeddedController extends Logger {
 					`Moonlight Embedded command "${command}" wasn't found. Moonlight functionality is disabled.`,
 				);
 			});
+	}
+
+	addHost(address: string, port?: number) {
+		const existingHost = this.findHost(
+			(status) => status.address == address && status.port == port,
+		);
+		if (existingHost) {
+			throw new Error("Host already registered");
+		}
+		const host = new MoonlightHost(address, port || null, this, this.ipc);
+		this.hosts.add(host);
+		host.addEventListener("status", () => {
+			this.hostsUpdated();
+		});
+		this.hostsUpdated();
+		return host;
 	}
 
 	isEnabled() {
