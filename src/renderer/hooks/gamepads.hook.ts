@@ -13,17 +13,30 @@ interface Props {
 		buttonId: GamepadButtonId,
 		controllerIndex: number,
 	) => void;
+	onPoll?: (gamepads: Gamepad[]) => void;
 }
 
 export default function useGamepads({
 	onButtonChange,
 	onButtonPress,
 	onButtonRelease,
+	onPoll,
 }: Props = {}) {
 	const gamepadManager = useMemo(() => GamepadManager.getInstance(), []);
 	const [gamepads, setGamepads] = useState(
 		GamepadManager.getInstance().getGamepads(),
 	);
+
+	useEffect(() => {
+		if (!onPoll) {
+			return;
+		}
+		gamepadManager.addEventListener("poll", onPoll);
+
+		return () => {
+			gamepadManager.removeEventListener("poll", onPoll);
+		};
+	}, [gamepadManager, onPoll]);
 
 	useEffect(() => {
 		const addListener = (gamepad: Gamepad) => {
