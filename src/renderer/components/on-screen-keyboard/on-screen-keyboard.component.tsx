@@ -2,7 +2,7 @@ import NavList from "@component/nav-list";
 import IFocusableProps from "@interface/focusable-props.interface";
 import styles from "./on-screen-keyboard.module.scss";
 import useFocusStore from "@state/focus.store";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import useNavigatable from "@hook/navigatable.hook";
 import { cc } from "@util/string.util";
 import MovementAction from "@enum/movement-action.enum";
@@ -11,6 +11,8 @@ interface KeyProps extends IFocusableProps {
 	letter: string;
 	focusOnCreate?: boolean;
 	onFocus?: (move: (action: MovementAction) => void) => void;
+	u?: number;
+	onPress?: (letter: string) => void;
 }
 
 function Key({
@@ -19,15 +21,21 @@ function Key({
 	setUnfocused,
 	letter,
 	focusOnCreate,
+	u,
+	onPress,
 }: KeyProps) {
+	const formattedLetter = useMemo(() => {
+		return letter.split("_").join("");
+	}, [letter]);
 	const move = useCallback(
 		(action: MovementAction) => {
 			if (action == MovementAction.ENTER) {
 				setFocused(key, action);
+				onPress?.(letter);
 			}
 			setUnfocused(action);
 		},
-		[setUnfocused],
+		[setUnfocused, onPress],
 	);
 
 	const { ref, isFocused, key, isRegistered } = useNavigatable(
@@ -50,8 +58,11 @@ function Key({
 			className={cc(styles.key, isFocused && styles.focused)}
 			ref={ref}
 			onClick={() => move(MovementAction.ENTER)}
+			style={{
+				width: `${(u || 1) * 60}px`,
+			}}
 		>
-			{letter}
+			{formattedLetter}
 		</div>
 	);
 }
@@ -59,6 +70,15 @@ function Key({
 interface Props extends IFocusableProps {}
 
 export function OnScreenKeyboard({ parentKey, setUnfocused, index }: Props) {
+	const [capslock, setCapslock] = useState(false);
+	const [shift, setShift] = useState(false);
+
+	const press = (key: string) => {
+		console.log("PRESS:", key);
+	};
+
+	const keymap = STANDARD_KEYMAP;
+
 	return (
 		<NavList
 			parentKey={parentKey}
@@ -67,58 +87,83 @@ export function OnScreenKeyboard({ parentKey, setUnfocused, index }: Props) {
 			className={styles.container}
 			setUnfocused={setUnfocused}
 		>
-			{(props) => (
+			{keymap.map((row) => (props) => (
 				<NavList {...props} direction="horizontal" className={styles.row}>
-					{(props) => <Key {...props} letter="1" key="1" focusOnCreate />}
-					{(props) => <Key {...props} letter="2" key="2" />}
-					{(props) => <Key {...props} letter="3" key="3" />}
-					{(props) => <Key {...props} letter="4" key="4" />}
-					{(props) => <Key {...props} letter="5" key="5" />}
-					{(props) => <Key {...props} letter="6" key="6" />}
-					{(props) => <Key {...props} letter="7" key="7" />}
-					{(props) => <Key {...props} letter="8" key="8" />}
-					{(props) => <Key {...props} letter="9" key="9" />}
-					{(props) => <Key {...props} letter="0" key="0" />}
+					{row.map(([letter, width]) => (props) => (
+						<Key
+							{...props}
+							letter={letter}
+							key={letter}
+							onPress={press}
+							u={width}
+						/>
+					))}
 				</NavList>
-			)}
-			{(props) => (
-				<NavList {...props} direction="horizontal" className={styles.row}>
-					{(props) => <Key {...props} letter="q" key="q" />}
-					{(props) => <Key {...props} letter="w" key="w" />}
-					{(props) => <Key {...props} letter="e" key="e" />}
-					{(props) => <Key {...props} letter="r" key="r" />}
-					{(props) => <Key {...props} letter="t" key="t" />}
-					{(props) => <Key {...props} letter="y" key="y" />}
-					{(props) => <Key {...props} letter="u" key="u" />}
-					{(props) => <Key {...props} letter="i" key="i" />}
-					{(props) => <Key {...props} letter="o" key="o" />}
-					{(props) => <Key {...props} letter="p" key="p" />}
-				</NavList>
-			)}
-			{(props) => (
-				<NavList {...props} direction="horizontal" className={styles.row}>
-					{(props) => <Key {...props} letter="a" key="a" />}
-					{(props) => <Key {...props} letter="s" key="s" />}
-					{(props) => <Key {...props} letter="d" key="d" />}
-					{(props) => <Key {...props} letter="f" key="f" />}
-					{(props) => <Key {...props} letter="g" key="g" />}
-					{(props) => <Key {...props} letter="h" key="h" />}
-					{(props) => <Key {...props} letter="j" key="j" />}
-					{(props) => <Key {...props} letter="k" key="k" />}
-					{(props) => <Key {...props} letter="l" key="l" />}
-				</NavList>
-			)}
-			{(props) => (
-				<NavList {...props} direction="horizontal" className={styles.row}>
-					{(props) => <Key {...props} letter="z" key="z" />}
-					{(props) => <Key {...props} letter="x" key="x" />}
-					{(props) => <Key {...props} letter="c" key="c" />}
-					{(props) => <Key {...props} letter="v" key="v" />}
-					{(props) => <Key {...props} letter="b" key="b" />}
-					{(props) => <Key {...props} letter="n" key="n" />}
-					{(props) => <Key {...props} letter="m" key="m" />}
-				</NavList>
-			)}
+			))}
 		</NavList>
 	);
 }
+
+const STANDARD_KEYMAP: [string, number][][] = [
+	[
+		["`", 1],
+		["1", 1],
+		["2", 1],
+		["3", 1],
+		["4", 1],
+		["5", 1],
+		["6", 1],
+		["7", 1],
+		["8", 1],
+		["9", 1],
+		["0", 1],
+		["-", 1],
+		["=", 1],
+		["back", 2],
+	],
+	[
+		["tab", 1.5],
+		["q", 1],
+		["w", 1],
+		["e", 1],
+		["r", 1],
+		["t", 1],
+		["y", 1],
+		["u", 1],
+		["i", 1],
+		["o", 1],
+		["p", 1],
+		["[", 1],
+		["]", 1],
+		["\\", 1.5],
+	],
+	[
+		["capslock", 1.75],
+		["a", 1],
+		["s", 1],
+		["d", 1],
+		["f", 1],
+		["g", 1],
+		["h", 1],
+		["j", 1],
+		["k", 1],
+		["l", 1],
+		[";", 1],
+		["'", 1],
+		["enter", 2.25],
+	],
+	[
+		["shift", 2.25],
+		["z", 1],
+		["x", 1],
+		["c", 1],
+		["v", 1],
+		["b", 1],
+		["n", 1],
+		["m", 1],
+		[",", 1],
+		[".", 1],
+		["/", 1],
+		["shift_", 2.75],
+	],
+];
