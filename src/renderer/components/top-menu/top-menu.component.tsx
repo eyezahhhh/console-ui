@@ -8,15 +8,19 @@ import PowerIcon from "@icon/power.svg?react";
 import { useNavigate } from "react-router";
 import useGamepads from "@hook/gamepads.hook";
 import GamepadIndicator from "@component/gamepad-indicator";
+import PowerMenu from "@component/power-menu";
+import { useState } from "react";
 
 interface Props extends IFocusableProps {}
 
 export function TopMenu(props: Props) {
 	const navigate = useNavigate();
 	const gamepads = useGamepads();
+	const [powerMenuOpen, setPowerMenuOpen] = useState(false);
 
 	return (
 		<div className={styles.container}>
+			<PowerMenu open={powerMenuOpen} onClose={() => setPowerMenuOpen(false)} />
 			<div className={styles.gamepadsContainer}>
 				{gamepads.map((gamepad) => (
 					<GamepadIndicator key={gamepad.index} gamepadIndex={gamepad.index} />
@@ -45,7 +49,14 @@ export function TopMenu(props: Props) {
 						onEnter={() => navigate("/settings")}
 					/>
 				)}
-				{(props) => <TopMenuButton {...props} icon={<PowerIcon />} key={2} />}
+				{(props) => (
+					<TopMenuButton
+						{...props}
+						icon={<PowerIcon />}
+						key={2}
+						onEnter={() => setPowerMenuOpen(true)}
+					/>
+				)}
 			</NavList>
 		</div>
 	);

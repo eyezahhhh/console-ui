@@ -26,7 +26,6 @@ export class IpcMain {
 		for (let [channel, callback] of Object.entries(handlers)) {
 			this.logger.log(`Registered handler for channel "${channel}"`);
 			ipcMain.handle(channel, (event, ...args) => {
-				// @ts-expect-error
 				return callback(...args);
 			});
 		}

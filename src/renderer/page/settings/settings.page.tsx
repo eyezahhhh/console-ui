@@ -11,9 +11,11 @@ import MOONLIGHT_PLATFORMS from "@const/moonlight-platforms.const";
 import ISettings from "@interface/settings.interface";
 import styles from "./settings.module.scss";
 import Button from "@component/button";
+import { useNavigate } from "react-router";
 
 export function SettingsPage(props: IFocusableProps) {
 	const settings = useSettings();
+	const navigate = useNavigate();
 	const [isSaving, setIsSaving] = useState(false);
 
 	const [moonlightCommand, setMoonlightCommand] = useState(
@@ -73,6 +75,11 @@ export function SettingsPage(props: IFocusableProps) {
 
 	return (
 		<NavList {...props} direction="vertical" className={styles.container}>
+			{(props) => (
+				<Button {...props} onEnter={() => navigate("/gamepad-debug")}>
+					Debug Gamepads
+				</Button>
+			)}
 			<span className={styles.label}>Moonlight-Embedded command</span>
 			{(props) => (
 				<TextInput

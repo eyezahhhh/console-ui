@@ -11,6 +11,7 @@ type GamepadManagerEvents = {
 	buttonchanged: [GamepadButtonId, boolean, number]; // button id, button pressed, controller index
 	added: [Gamepad]; // gamepad
 	removed: [Gamepad]; // gamepad
+	poll: [Gamepad[]]; // gamepads
 };
 
 export class GamepadManager extends Emitter<GamepadManagerEvents> {
@@ -71,6 +72,8 @@ export class GamepadManager extends Emitter<GamepadManagerEvents> {
 					}
 				}
 			}
+
+			this.emit("poll", gamepads);
 		};
 		frame();
 	}

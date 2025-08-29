@@ -26,10 +26,31 @@ Promise.all([app.whenReady(), settings.read()]).then(() => {
 			},
 			get_settings: () => settings.get(),
 			save_settings: (newSettings) => settings.validateAndSet(newSettings),
+			create_machine: (address) => {
+				try {
+					const parts = address.split(":");
+					let port: number | undefined = undefined;
+					if (parts.length >= 2) {
+						let part = parseFloat(parts[1]);
+						if (!isNaN(part) && Number.isInteger(part)) {
+							port = part;
+						}
+					}
+					getMoonlight().addHost(parts[0], port);
+					return true;
+				} catch (e) {
+					logger.error("Failed to create Moonlight host:", e);
+					return false;
+				}
+			},
 		},
 		IS_DEV,
 		settings,
 	);
+
+	ipc.addEventListener("quit", () => {
+		app.quit();
+	});
 
 	settings.addEventListener("updated", (settings) =>
 		ipc.send("settings", settings),

@@ -1,4 +1,5 @@
 export default interface IMoonlightHostDiskInfo {
 	serverCert: string;
-	clientSecret: string;
+	address: string;
+	port: number;
 }

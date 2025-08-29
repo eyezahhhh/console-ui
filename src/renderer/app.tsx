@@ -10,6 +10,7 @@ import HomePage from "./page/home";
 import MachinePage from "./page/machine";
 import SettingsPage from "./page/settings";
 import MovementAction from "@enum/movement-action.enum";
+import GamepadDebugPage from "./page/gamepad-debug";
 
 function App() {
 	const key = useMemo(() => ({}), []);
@@ -40,6 +41,7 @@ function App() {
 							"/": (props) => <HomePage {...props} />,
 							"machine/:machine": (props) => <MachinePage {...props} />,
 							settings: (props) => <SettingsPage {...props} />,
+							"gamepad-debug": (props) => <GamepadDebugPage {...props} />,
 						}}
 					/>
 				)}
