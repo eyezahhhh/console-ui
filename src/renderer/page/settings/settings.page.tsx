@@ -113,6 +113,7 @@ export function SettingsPage(props: IFocusableProps) {
 					{...props}
 					value={fps}
 					onChange={(value) => changeIfInt(value, true, setFps)}
+					keymap="whole_number"
 				/>
 			)}
 			<span className={styles.label}>Bitrate (Kbps)</span>
@@ -121,6 +122,7 @@ export function SettingsPage(props: IFocusableProps) {
 					{...props}
 					value={bitrate}
 					onChange={(value) => changeIfInt(value, true, setBitrate)}
+					keymap="whole_number"
 				/>
 			)}
 			<span className={styles.label}>Packet size (bps)</span>
@@ -129,6 +131,7 @@ export function SettingsPage(props: IFocusableProps) {
 					{...props}
 					value={packetSize}
 					onChange={(value) => changeIfInt(value, true, setPacketSize)}
+					keymap="whole_number"
 				/>
 			)}
 			<span className={styles.label}>Codec</span>

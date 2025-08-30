@@ -2,14 +2,12 @@ import NavList from "@component/nav-list";
 import styles from "./top-menu.module.scss";
 import IFocusableProps from "@interface/focusable-props.interface";
 import TopMenuButton from "@component/top-menu-button";
-import UserIcon from "@icon/user.svg?react";
-import SettingsIcon from "@icon/settings.svg?react";
-import PowerIcon from "@icon/power.svg?react";
 import { useNavigate } from "react-router";
 import useGamepads from "@hook/gamepads.hook";
 import GamepadIndicator from "@component/gamepad-indicator";
 import PowerMenu from "@component/power-menu";
 import { useState } from "react";
+import { Computer, PowerSettingsNew, Settings } from "@mui/icons-material";
 
 interface Props extends IFocusableProps {}
 
@@ -36,7 +34,7 @@ export function TopMenu(props: Props) {
 				{(props) => (
 					<TopMenuButton
 						{...props}
-						icon={<UserIcon />}
+						icon={<Computer />}
 						key={0}
 						onEnter={() => navigate("/")}
 					/>
@@ -44,7 +42,7 @@ export function TopMenu(props: Props) {
 				{(props) => (
 					<TopMenuButton
 						{...props}
-						icon={<SettingsIcon />}
+						icon={<Settings />}
 						key={1}
 						onEnter={() => navigate("/settings")}
 					/>
@@ -52,7 +50,7 @@ export function TopMenu(props: Props) {
 				{(props) => (
 					<TopMenuButton
 						{...props}
-						icon={<PowerIcon />}
+						icon={<PowerSettingsNew />}
 						key={2}
 						onEnter={() => setPowerMenuOpen(true)}
 					/>

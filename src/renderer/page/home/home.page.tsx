@@ -18,7 +18,12 @@ export function HomePage(props: IFocusableProps) {
 		<NavList {...props} direction="vertical">
 			<Modal open={createOpen} onClose={() => setCreateOpen(false)}>
 				{(props) => (
-					<TextInput {...props} value={createInput} onChange={setCreateInput} />
+					<TextInput
+						{...props}
+						value={createInput}
+						onChange={setCreateInput}
+						keymap="ip_address"
+					/>
 				)}
 				{(props) => (
 					<Button

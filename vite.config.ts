@@ -23,7 +23,6 @@ export default defineConfig({
 			"@component": path.resolve(__dirname, "src/renderer/components"),
 			"@hook": path.resolve(__dirname, "src/renderer/hooks"),
 			"@state": path.resolve(__dirname, "src/renderer/state"),
-			"@icon": path.resolve(__dirname, "src/renderer/icons"),
 
 			"@enum": path.resolve(__dirname, "src/shared/enum"),
 			"@interface": path.resolve(__dirname, "src/shared/interface"),
