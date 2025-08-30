@@ -8,7 +8,6 @@
 			"@component/*": ["renderer/components/*"],
 			"@hook/*": ["renderer/hooks/*"],
 			"@state/*": ["renderer/state/*"],
-			"@icon/*": ["renderer/icons/*"],
 
 			"@/*": ["renderer/*"],
 

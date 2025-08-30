@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useFocusStore, { Connection } from "@state/focus.store";
 import MovementAction from "@enum/movement-action.enum";
 import useGamepads from "./gamepads.hook";
@@ -9,7 +9,16 @@ export default function useNavigatable<T extends HTMLElement>(
 	index: number,
 	onMoveAction: (action: MovementAction) => void,
 	onFocus?: (fromComponent: Connection | null, action: MovementAction) => void,
+	dontFocusElement?: boolean,
 ) {
+	const moveRef = useRef<(action: MovementAction) => void>(onMoveAction);
+	useEffect(() => {
+		moveRef.current = onMoveAction;
+	}, [onMoveAction]);
+	const move = useCallback((action: MovementAction) => {
+		moveRef.current(action);
+	}, []);
+
 	const [ref, setRef] = useState<T | null>(null);
 	const [isRegistered, setIsRegistered] = useState(false);
 	const key = useMemo(() => ({}), []);
@@ -45,14 +54,14 @@ export default function useNavigatable<T extends HTMLElement>(
 			return;
 		}
 
-		const deregister = registerElement(key, parentKey, index, ref);
+		const deregister = registerElement(key, parentKey, index, ref, move);
 		setIsRegistered(true);
 
 		return () => {
 			setIsRegistered(false);
 			deregister();
 		};
-	}, [ref, key, parentKey, index]);
+	}, [ref, key, parentKey, index, move]);
 
 	useEffect(() => {
 		if (!ref) {
@@ -85,10 +94,20 @@ export default function useNavigatable<T extends HTMLElement>(
 
 	useEffect(() => {
 		if (ref && focusedComponent?.key === key) {
-			ref.focus();
+			if (!dontFocusElement) {
+				ref.focus();
+			}
 			onFocus?.(lastFocusedComponent, lastAction);
 		}
-	}, [ref, focusedComponent, lastFocusedComponent, key, onFocus, lastAction]);
+	}, [
+		ref,
+		focusedComponent,
+		lastFocusedComponent,
+		key,
+		onFocus,
+		lastAction,
+		dontFocusElement,
+	]);
 
 	return {
 		ref: setRef,
@@ -96,5 +115,6 @@ export default function useNavigatable<T extends HTMLElement>(
 		isFocused: focusedComponent?.key === key,
 		isRegistered,
 		element: ref,
+		focusedComponent,
 	};
 }

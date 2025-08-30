@@ -5,5 +5,6 @@ type MainToRendererHandler = {
 	get_machines: [[], IMachine[]];
 	get_settings: [[], ISettings];
 	save_settings: [[ISettings], boolean];
+	create_machine: [[string], boolean];
 };
 export default MainToRendererHandler;
