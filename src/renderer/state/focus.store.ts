@@ -6,6 +6,7 @@ export type Connection = {
 	index: number;
 	ref: HTMLElement;
 	key: {};
+	move: (action: MovementAction) => void;
 };
 
 interface IFocusState {
@@ -18,6 +19,7 @@ interface IFocusState {
 		parentKey: {} | null,
 		index: number,
 		ref: HTMLElement,
+		move: (action: MovementAction) => void,
 	) => () => void;
 	setFocused: (key: {}, action: MovementAction) => void;
 	setFocusedFromParent: (
@@ -34,12 +36,13 @@ const useFocusStore = create<IFocusState>((set, get) => ({
 	lastFocusedComponent: null,
 	lastAction: MovementAction.ENTER,
 	hooks: new Map(),
-	registerElement: (key, parentKey, index, ref) => {
+	registerElement: (key, parentKey, index, ref, move) => {
 		get().hooks.set(key, {
 			parent: parentKey,
 			index,
 			ref,
 			key,
+			move,
 		});
 
 		return () => {
@@ -103,8 +106,15 @@ const useFocusStore = create<IFocusState>((set, get) => ({
 	},
 	isFocusedChildOf: (parentKey) => {
 		let component: Connection | null = get().focusedComponent;
+		const traversed: {}[] = [];
 
 		while (component) {
+			if (traversed.includes(component.key)) {
+				console.error("Component loop detected!");
+				return false;
+			}
+			traversed.push(component.key);
+
 			if (component.key == parentKey) {
 				return true;
 			}
