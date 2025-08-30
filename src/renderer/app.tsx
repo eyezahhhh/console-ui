@@ -9,6 +9,7 @@ import PageRouter from "@component/page-router";
 import HomePage from "./page/home";
 import MachinePage from "./page/machine";
 import SettingsPage from "./page/settings";
+import GamepadDebugPage from "./page/gamepad-debug";
 import MovementAction from "@enum/movement-action.enum";
 
 function App() {
@@ -40,6 +41,7 @@ function App() {
 							"/": (props) => <HomePage {...props} />,
 							"machine/:machine": (props) => <MachinePage {...props} />,
 							settings: (props) => <SettingsPage {...props} />,
+							"gamepad-debug": (props) => <GamepadDebugPage {...props} />,
 						}}
 					/>
 				)}

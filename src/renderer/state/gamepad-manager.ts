@@ -5,16 +5,23 @@ interface GamepadState {
 	buttons: Map<GamepadButtonId, boolean>;
 }
 
+interface GamepadInfo {
+	name: string;
+	mapping: (GamepadButtonId | null)[];
+}
+
 type GamepadManagerEvents = {
 	buttonpressed: [GamepadButtonId, number]; // button id, controller index
 	buttonreleased: [GamepadButtonId, number]; // button id, controller index
 	buttonchanged: [GamepadButtonId, boolean, number]; // button id, button pressed, controller index
 	added: [Gamepad]; // gamepad
 	removed: [Gamepad]; // gamepad
+	poll: [Gamepad[]]; // gamepads
 };
 
 export class GamepadManager extends Emitter<GamepadManagerEvents> {
 	private static instance: GamepadManager | null;
+	private readonly gamepadInfo = new Map<number, GamepadInfo>();
 
 	public static getInstance() {
 		if (!this.instance) {
@@ -34,7 +41,22 @@ export class GamepadManager extends Emitter<GamepadManagerEvents> {
 		super();
 		console.log(`Loaded ${this.gamepadStates.size} gamepads`);
 		window.addEventListener("gamepadconnected", (event) => {
+			const name = event.gamepad.id.substring(
+				0,
+				event.gamepad.id.indexOf(" ("),
+			);
+			console.log(`Gamepad name: "${name}"`);
 			console.log("Loaded new gamepad");
+			let mapping = DEFAULT_MAPPING;
+
+			if (name == "Nintendo Switch Lite Gamepad") {
+				mapping = SWITCH_MAPPING;
+			}
+
+			this.gamepadInfo.set(event.gamepad.index, {
+				name,
+				mapping,
+			});
 			this.gamepadStates.set(
 				event.gamepad.index,
 				this.getGamepadState(event.gamepad),
@@ -46,6 +68,7 @@ export class GamepadManager extends Emitter<GamepadManagerEvents> {
 			console.log("Unloaded gamepad");
 			this.gamepadStates.delete(event.gamepad.index);
 			this.emit("removed", event.gamepad);
+			this.gamepadInfo.delete(event.gamepad.index);
 		});
 
 		const frame = () => {
@@ -71,6 +94,8 @@ export class GamepadManager extends Emitter<GamepadManagerEvents> {
 					}
 				}
 			}
+
+			this.emit("poll", gamepads);
 		};
 		frame();
 	}
@@ -80,10 +105,18 @@ export class GamepadManager extends Emitter<GamepadManagerEvents> {
 	}
 
 	private getGamepadState(gamepad: Gamepad): GamepadState {
+		const info = this.gamepadInfo.get(gamepad.index);
+		if (!info) {
+			throw new Error("Gamepad info not set");
+		}
+
 		const buttons = new Map<GamepadButtonId, boolean>();
 
 		for (let [i, button] of gamepad.buttons.entries()) {
-			buttons.set(i, button.pressed);
+			const mappedIndex = info.mapping[i];
+			if (mappedIndex !== null) {
+				buttons.set(mappedIndex, button.pressed);
+			}
 		}
 
 		return {
@@ -91,3 +124,44 @@ export class GamepadManager extends Emitter<GamepadManagerEvents> {
 		};
 	}
 }
+
+const DEFAULT_MAPPING: (GamepadButtonId | null)[] = [
+	GamepadButtonId.A,
+	GamepadButtonId.B,
+	GamepadButtonId.X,
+	GamepadButtonId.Y,
+	GamepadButtonId.LB,
+	GamepadButtonId.RB,
+	GamepadButtonId.LT,
+	GamepadButtonId.RT,
+	GamepadButtonId.SELECT,
+	GamepadButtonId.START,
+	GamepadButtonId.LS,
+	GamepadButtonId.RS,
+	GamepadButtonId.D_UP,
+	GamepadButtonId.D_DOWN,
+	GamepadButtonId.D_LEFT,
+	GamepadButtonId.D_RIGHT,
+	GamepadButtonId.HOME,
+];
+
+const SWITCH_MAPPING: (GamepadButtonId | null)[] = [
+	GamepadButtonId.A,
+	GamepadButtonId.B,
+	GamepadButtonId.Y,
+	GamepadButtonId.X,
+	null,
+	GamepadButtonId.LB,
+	GamepadButtonId.RB,
+	GamepadButtonId.LT,
+	GamepadButtonId.RT,
+	GamepadButtonId.SELECT,
+	GamepadButtonId.START,
+	GamepadButtonId.HOME,
+	GamepadButtonId.LS,
+	GamepadButtonId.RS,
+	GamepadButtonId.D_UP,
+	GamepadButtonId.D_DOWN,
+	GamepadButtonId.D_LEFT,
+	GamepadButtonId.D_RIGHT,
+];

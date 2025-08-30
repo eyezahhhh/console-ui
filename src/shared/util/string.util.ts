@@ -12,3 +12,18 @@ export function getGamestreamHostName(type: "gamestream" | "sunshine" | null) {
 			return "Sunshine or NVIDIA Gamestream";
 	}
 }
+
+export function splice(
+	value: string,
+	start: number,
+	length: number,
+	insert?: string,
+) {
+	const chars = value.split("");
+	if (insert) {
+		chars.splice(start, length, insert);
+	} else {
+		chars.splice(start, length);
+	}
+	return chars.join("");
+}

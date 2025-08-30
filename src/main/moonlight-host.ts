@@ -30,6 +30,7 @@ type Events = {
 };
 export default class MoonlightHost extends Emitter<Events> {
 	private readonly axios: AxiosInstance;
+	private readonly port: number;
 	private isHttpsSupported = false;
 	private uuid: string | null = null;
 	private name: string | null = null;
@@ -44,17 +45,28 @@ export default class MoonlightHost extends Emitter<Events> {
 	private pairAbort: AbortController | null = null;
 	private apps: ISunshineApp[] = [];
 
+	static async fromUuid(uuid: string, controller: MoonlightEmbeddedController) {
+		const filePath = path.join(this.getStorageDir(), `${uuid}.json`);
+		const contents = await promisify(readFile)(filePath, "utf-8");
+		const json = JSON.parse(contents) as IMoonlightHostDiskInfo;
+		if (typeof json.address != "string" || typeof json.port != "number") {
+			throw new Error("Disk info missing address or port");
+		}
+		return controller.addHost(json.address, json.port);
+	}
+
 	constructor(
 		private readonly address: string,
-		private readonly port: number,
+		port: number | null,
 		private readonly controller: MoonlightEmbeddedController,
 		private readonly ipc: IpcMain,
 	) {
 		super();
+		this.port = port || 47989;
 		this.axios = Axios.create({
-			baseURL: `http://${address}:${port}`,
+			baseURL: `http://${address}:${this.port}`,
 		});
-		this.logger = new StandaloneLogger(`Moonlight ${address}:${port}`);
+		this.logger = new StandaloneLogger(`Moonlight ${address}:${this.port}`);
 		this.logger.log(`Created new Moonlight host`);
 
 		this.fetchServerInfo().catch((error) => this.logger.error(error));
@@ -182,7 +194,11 @@ export default class MoonlightHost extends Emitter<Events> {
 				const { root: xml } = parser.parse(response.data) as {
 					root: ISunshineAppList;
 				};
-				this.apps = xml.App;
+				if (Array.isArray(xml.App)) {
+					this.apps = xml.App;
+				} else {
+					this.apps = [xml.App];
+				}
 				this.emit("apps", this.apps);
 
 				if (xml["@_status_code"] != "200") {
@@ -322,7 +338,7 @@ export default class MoonlightHost extends Emitter<Events> {
 		return crypto.randomUUID().split("-").join("");
 	}
 
-	private getStorageDir() {
+	static getStorageDir() {
 		return path.join(app.getPath("userData"), "gfe");
 	}
 
@@ -330,7 +346,7 @@ export default class MoonlightHost extends Emitter<Events> {
 		if (!this.uuid) {
 			throw new Error("UUID is unknown");
 		}
-		return path.join(this.getStorageDir(), `${this.uuid}.json`);
+		return path.join(MoonlightHost.getStorageDir(), `${this.uuid}.json`);
 	}
 
 	private async saveInfo(data: IMoonlightHostDiskInfo) {
@@ -338,7 +354,7 @@ export default class MoonlightHost extends Emitter<Events> {
 		this.logger.log(`Saving info to disk... (${storageFile})`);
 		this.diskData = data;
 
-		await promisify(mkdir)(this.getStorageDir(), {
+		await promisify(mkdir)(MoonlightHost.getStorageDir(), {
 			recursive: true,
 		});
 		await promisify(writeFile)(storageFile, JSON.stringify(data, null, 2));
@@ -579,7 +595,8 @@ export default class MoonlightHost extends Emitter<Events> {
 
 			await this.saveInfo({
 				serverCert: serverCert.toString("base64"),
-				clientSecret: clientSecret.toString("base64"),
+				address: this.address,
+				port: this.port,
 			});
 
 			if (this.pairAbort == controller) {
