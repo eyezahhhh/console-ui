@@ -46,7 +46,7 @@ const STANDARD_KEYMAP: OnScreenKeyboardKeymapLayout = [
 		["l", "L", 1],
 		[";", ":", 1],
 		["'", '"', 1],
-		["enter", null, 2.25],
+		["exit", null, 2.25],
 	],
 	[
 		["shift", null, 2.25],
