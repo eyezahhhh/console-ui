@@ -40,6 +40,7 @@ export function ResolutionInput({
 					{...props}
 					value={resolution[0]}
 					onChange={(e) => change(e, 0)}
+					keymap="whole_number"
 				/>
 			)}
 			{(props) => (
@@ -47,6 +48,7 @@ export function ResolutionInput({
 					{...props}
 					value={resolution[1]}
 					onChange={(e) => change(e, 1)}
+					keymap="whole_number"
 				/>
 			)}
 		</NavList>

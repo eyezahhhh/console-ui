@@ -9,12 +9,12 @@
 		}
 
 		&.bouncing {
-			animation: bounce 0.15s ease;
+			animation: #{bounce} 0.15s ease;
 		}
 	}
 }
 
-@keyframes bounce {
+@keyframes #{bounce} {
 	0% {
 		transform: scale(1);
 	}
