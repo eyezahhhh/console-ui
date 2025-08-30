@@ -5,9 +5,9 @@
 	width: 60px;
 	padding: 2px;
 	cursor: pointer;
+	color: var(--color-text);
 
 	.content {
-		background: var(--color-accent1-faint);
 		height: 100%;
 		position: relative;
 
@@ -26,6 +26,7 @@
 	}
 
 	&.focused {
-		background: var(--color-accent1);
+		background: var(--color-background-primary-focus);
+		color: var(--color-text-primary-focus);
 	}
 }

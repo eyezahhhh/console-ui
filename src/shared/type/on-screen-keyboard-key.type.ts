@@ -69,7 +69,8 @@ type Special =
 	| "shift_"
 	| "backspace"
 	| "enter"
-	| "space";
+	| "space"
+	| "exit";
 
 type OnScreenKeyboardKey =
 	| Row1

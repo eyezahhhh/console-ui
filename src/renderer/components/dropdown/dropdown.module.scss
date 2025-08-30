@@ -4,22 +4,49 @@
 	width: max-content;
 	flex-direction: column;
 	user-select: none;
-	background: var(--color-accent1-faint);
+	background: var(--color-background-surface);
 	margin: 6px;
 	position: relative;
+	border: 1px solid var(--color-background-surface-focus);
 
 	&.focused,
 	&.open {
-		outline: 2px solid var(--color-accent1-faint);
-		outline-offset: 4px;
-		background: var(--color-accent1);
+		border-color: var(--color-background-primary);
 		z-index: 1;
+	}
+
+	&.open .preview {
+		position: relative;
+
+		&::after {
+			content: "";
+			position: absolute;
+			bottom: 1px;
+			left: 0;
+			right: 0;
+			height: 1px;
+			background: var(--color-background-surface-focus);
+		}
 	}
 
 	.preview {
 		font-size: 2rem;
 		padding: 12px 16px;
 		background: transparent;
+		color: var(--color-text);
+		display: flex;
+		align-items: center;
+		gap: 8px;
+
+		.arrowDown {
+			animation: #{arrow-bounce-down} 0.15s;
+			font-size: 2rem;
+		}
+
+		.arrowUp {
+			animation: #{arrow-bounce-up} 0.15s;
+			font-size: 2rem;
+		}
 	}
 
 	.optionsContainer {
@@ -30,14 +57,29 @@
 	.options {
 		display: none;
 		flex-direction: column;
+		position: relative;
+		isolation: isolate;
+
+		&::before {
+			content: "";
+			position: absolute;
+			inset: -1px;
+			background: var(--color-background-surface);
+			z-index: -1;
+			border: 1px solid var(--color-background-primary);
+			border-top: none;
+		}
 
 		.option {
 			font-size: 2rem;
 			padding: 8px 16px;
+			background: transparent;
+			color: var(--color-text);
+			transition: background 0.1s;
 
 			&.focused {
-				// background: red;
-				background: var(--color-accent1);
+				background: var(--color-background-primary-focus);
+				color: var(--color-text-primary-focus);
 			}
 		}
 	}
@@ -46,5 +88,29 @@
 		.options {
 			display: flex;
 		}
+	}
+}
+
+@keyframes #{arrow-bounce-down} {
+	0% {
+		transform: translateY(0px);
+	}
+	50% {
+		transform: translateY(-4px);
+	}
+	100% {
+		transform: translateY(0px);
+	}
+}
+
+@keyframes #{arrow-bounce-up} {
+	0% {
+		transform: translateY(0px);
+	}
+	50% {
+		transform: translateY(4px);
+	}
+	100% {
+		transform: translateY(0px);
 	}
 }

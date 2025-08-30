@@ -7,6 +7,8 @@ import { useEffect, useMemo, useState } from "react";
 import NavList from "@component/nav-list";
 import Button from "@component/button";
 import useFocusStore from "@state/focus.store";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
 
 interface Props extends IFocusableProps {
 	options: string[];
@@ -73,6 +75,11 @@ export function Dropdown({
 		>
 			<button className={styles.preview} ref={ref}>
 				{selected ?? "Select..."}
+				{isOpen ? (
+					<ArrowDropUpIcon className={styles.arrowUp} />
+				) : (
+					<ArrowDropDownIcon className={styles.arrowDown} />
+				)}
 			</button>
 			<div className={styles.optionsContainer}>
 				<NavList

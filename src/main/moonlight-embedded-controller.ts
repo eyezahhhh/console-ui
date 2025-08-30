@@ -12,22 +12,25 @@ import IMoonlightHostStatus from "@interface/moonlight-host-status.interface";
 import { IpcMain } from "./ipc";
 import ISunshineApp from "@interface/sunshine-app.interface";
 import { ChildProcessWithoutNullStreams, spawn, exec } from "child_process";
+import Settings from "./settings";
 
 export class MoonlightEmbeddedController extends Logger {
 	private _isEnabled = false;
 	private readonly hosts = new Set<MoonlightHost>();
 	private stream: ChildProcessWithoutNullStreams | null = null;
+	private readonly command: string;
 
 	constructor(
-		private readonly command: string,
+		private readonly settings: Settings,
 		private readonly ipc: IpcMain,
 	) {
 		super();
 		this.log("Starting...");
+		this.command = settings.get().moonlightCommand;
 
-		this.debug(`Using Moonlight Embedded command "${command}".`);
+		this.debug(`Using Moonlight Embedded command "${this.command}".`);
 
-		commandExists(command)
+		commandExists(this.command)
 			.then(() => this.generateKeys())
 			.then(() => {
 				this._isEnabled = true;
@@ -79,7 +82,7 @@ export class MoonlightEmbeddedController extends Logger {
 			.catch((e) => {
 				this.error(e);
 				this.warn(
-					`Moonlight Embedded command "${command}" wasn't found. Moonlight functionality is disabled.`,
+					`Moonlight Embedded command "${this.command}" wasn't found. Moonlight functionality is disabled.`,
 				);
 			});
 	}
@@ -191,13 +194,35 @@ export class MoonlightEmbeddedController extends Logger {
 			);
 			logger.log("Starting child process.");
 
-			const child = spawn(
-				this.command,
-				["stream", host.getAddress().address, "-app", app.AppTitle],
-				{
-					stdio: [null, null, null],
-				},
-			);
+			const args = ["stream", host.getAddress().address, "-app", app.AppTitle];
+			const settings = this.settings.get();
+			args.push("-width", `${settings.resolution[0]}`);
+			args.push("-height", `${settings.resolution[1]}`);
+			args.push("-rotate", `${settings.rotation}`);
+			args.push("-fps", `${settings.fps}`);
+			args.push("-bitrate", `${settings.bitrate}`);
+			args.push("-packetsize", `${settings.packetSize}`);
+			args.push("-codec", settings.codec);
+			if (settings.hdr) {
+				args.push("-hdr");
+			}
+			if (typeof settings.remoteOptimizations == "boolean") {
+				args.push("-remote", settings.remoteOptimizations ? "yes" : "no");
+			} else {
+				args.push("-remote", "auto");
+			}
+			if (settings.surroundSound != "none") {
+				args.push("-surround", settings.surroundSound);
+			}
+			args.push("-platform", settings.platform);
+			if (settings.quitAppAfter) {
+				args.push("-quitappafter");
+			}
+
+			logger.log([this.command, ...args].join(" "));
+			const child = spawn(this.command, args, {
+				stdio: [null, null, null],
+			});
 			this.stream = child;
 
 			child.on("spawn", () => {

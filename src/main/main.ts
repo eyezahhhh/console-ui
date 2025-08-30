@@ -56,10 +56,7 @@ Promise.all([app.whenReady(), settings.read()]).then(() => {
 		ipc.send("settings", settings),
 	);
 
-	const moonlight = new MoonlightEmbeddedController(
-		settings.get().moonlightCommand,
-		ipc,
-	);
+	const moonlight = new MoonlightEmbeddedController(settings, ipc);
 	getMoonlight = () => moonlight;
 
 	ipc.getOrCreateWindow();
