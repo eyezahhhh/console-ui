@@ -1,6 +1,6 @@
 .top {
 	height: max(33vh, 200px);
-	background: #1b1b1b;
+	background: var(--color-background-surface);
 	display: flex;
 	align-items: flex-end;
 	padding: 20px;
@@ -23,9 +23,9 @@
 		font-weight: bold;
 		padding: 10px;
 
-		&.focused {
-			background: var(--color-accent1);
-		}
+		// &.focused {
+		// 	background: var(--color-accent1);
+		// }
 	}
 }
 

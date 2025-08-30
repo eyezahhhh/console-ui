@@ -12,6 +12,7 @@ interface Props extends IFocusableProps {
 	value: string | number;
 	onChange?: (value: string) => void;
 	keymap?: OnScreenKeyboardKeymap;
+	placeholder?: string;
 }
 
 export function TextInput({
@@ -21,6 +22,7 @@ export function TextInput({
 	value,
 	onChange,
 	keymap,
+	placeholder,
 }: Props) {
 	const [keyboardVisible, setKeyboardVisible] = useState(false);
 	const { isFocusedChildOf, setFocused } = useFocusStore();
@@ -34,16 +36,20 @@ export function TextInput({
 		}
 
 		if (element) {
-			if (action == MovementAction.LEFT) {
+			if (action == MovementAction.LEFT && element.selectionStart) {
 				let position = element.selectionStart || 0;
 				position = Math.max(0, position - 1);
-				element.setSelectionRange(position, position);
+				setSelection([position, position]);
 				return;
 			}
-			if (action == MovementAction.RIGHT) {
+			if (
+				action == MovementAction.RIGHT &&
+				element.selectionEnd !== null &&
+				element.selectionEnd < element.value.length
+			) {
 				let position = element.selectionEnd || 0;
 				position = Math.min(element.value.length, position + 1);
-				element.setSelectionRange(position, position);
+				setSelection([position, position]);
 				return;
 			}
 			if (action == MovementAction.ENTER) {
@@ -77,12 +83,23 @@ export function TextInput({
 		}
 	}, [element]);
 
+	useEffect(() => {
+		element?.setSelectionRange(...selection);
+	}, [element, selection, value]);
+
 	return (
 		<span>
 			<input
+				placeholder={placeholder}
 				ref={ref}
 				value={value}
-				onInput={(e) => onChange?.(e.currentTarget.value)}
+				onInput={(e) => {
+					onChange?.(e.currentTarget.value);
+					setSelection([
+						e.currentTarget.selectionStart ?? 0,
+						e.currentTarget.selectionEnd ?? e.currentTarget.selectionStart ?? 0,
+					]);
+				}}
 				className={cc(styles.input, isIndirectlyFocused && styles.focused)}
 				onClick={() => move(MovementAction.ENTER)}
 				onSelect={(e) =>
@@ -110,7 +127,11 @@ export function TextInput({
 							element?.focus();
 						}
 					}}
-					onChange={onChange}
+					onChange={(value, selection) => {
+						onChange?.(value);
+						console.log("Selection:", selection);
+						setSelection(selection);
+					}}
 				/>
 			)}
 		</span>
