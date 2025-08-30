@@ -6,10 +6,12 @@ import MovementAction from "@enum/movement-action.enum";
 import { useEffect, useMemo, useState } from "react";
 import OnScreenKeyboard from "@component/on-screen-keyboard";
 import useFocusStore from "@state/focus.store";
+import OnScreenKeyboardKeymap from "@type/on-screen-keyboard-keymap.type";
 
 interface Props extends IFocusableProps {
 	value: string | number;
 	onChange?: (value: string) => void;
+	keymap?: OnScreenKeyboardKeymap;
 }
 
 export function TextInput({
@@ -18,9 +20,11 @@ export function TextInput({
 	parentKey,
 	value,
 	onChange,
+	keymap,
 }: Props) {
 	const [keyboardVisible, setKeyboardVisible] = useState(false);
 	const { isFocusedChildOf, setFocused } = useFocusStore();
+	const [selection, setSelection] = useState<[number, number]>([0, 0]);
 	const move = (action: MovementAction) => {
 		if (keyboardVisible) {
 			if (isFocusedChildOf(key)) {
@@ -67,6 +71,12 @@ export function TextInput({
 		}
 	}, [isIndirectlyFocused, keyboardVisible]);
 
+	useEffect(() => {
+		if (!element) {
+			return;
+		}
+	}, [element]);
+
 	return (
 		<span>
 			<input
@@ -75,11 +85,20 @@ export function TextInput({
 				onInput={(e) => onChange?.(e.currentTarget.value)}
 				className={cc(styles.input, isIndirectlyFocused && styles.focused)}
 				onClick={() => move(MovementAction.ENTER)}
+				onSelect={(e) =>
+					setSelection([
+						e.currentTarget.selectionStart ?? 0,
+						e.currentTarget.selectionEnd ?? e.currentTarget.selectionStart ?? 0,
+					])
+				}
 			/>
 			{keyboardVisible && (
 				<OnScreenKeyboard
 					parentKey={key}
 					index={0}
+					selection={selection}
+					value={`${value}`}
+					keymap={keymap}
 					setUnfocused={(action) => {
 						if (action == MovementAction.BACK || action == MovementAction.UP) {
 							setKeyboardVisible(false);
@@ -91,6 +110,7 @@ export function TextInput({
 							element?.focus();
 						}
 					}}
+					onChange={onChange}
 				/>
 			)}
 		</span>
