@@ -53,7 +53,15 @@
 				"deb",
 				"rpm"
 			]
-		}
+		},
+		"publish": [
+			{
+				"provider": "github",
+				"owner": "eyezahhhh",
+				"repo": "console-ui",
+				"releaseType": "draft"
+			}
+		]
 	},
 	"dependencies": {
 		"@emotion/react": "^11.14.0",
