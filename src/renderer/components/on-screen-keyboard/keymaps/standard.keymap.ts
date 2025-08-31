@@ -63,9 +63,11 @@ const STANDARD_KEYMAP: OnScreenKeyboardKeymapLayout = [
 		["shift_", null, 2.75],
 	],
 	[
-		[null, null, 3.75],
+		[null, null, 2.75],
+		["left", null, 1],
 		["space", null, 6.25],
-		[null, null, 3.75],
+		["right", null, 1],
+		[null, null, 2.75],
 	],
 ];
 export default STANDARD_KEYMAP;
