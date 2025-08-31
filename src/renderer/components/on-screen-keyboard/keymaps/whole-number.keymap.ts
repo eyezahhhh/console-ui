@@ -11,7 +11,7 @@ const WHOLE_NUMBER_KEYMAP: OnScreenKeyboardKeymapLayout = [
 		["4", null, 1],
 		["5", null, 1],
 		["6", null, 1],
-		["enter", null, 2],
+		["exit", null, 2],
 	],
 	[
 		["7", null, 1],
@@ -20,10 +20,10 @@ const WHOLE_NUMBER_KEYMAP: OnScreenKeyboardKeymapLayout = [
 		[null, null, 2],
 	],
 	[
-		[".", null, 1],
-		["0", null, 1],
 		[null, null, 1],
-		[null, null, 2],
+		["0", null, 1],
+		["left", null, 1.5],
+		["right", null, 1.5],
 	],
 ];
 export default WHOLE_NUMBER_KEYMAP;

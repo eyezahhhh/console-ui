@@ -66,14 +66,35 @@
 		"Capitol City", "Impact", "Haettenschweiler", "Arial Black", sans-serif;
 	--font-normal: "Sansation", "Arial", sans-serif;
 
-	--color-background: #02020a;
-	--color-section-background: #0b1b1b;
+	--color-background: #111827;
+	--color-background-surface: #1f2937;
+	--color-background-surface-focus: #374151;
+	--color-text: #f9fafb;
 
-	--color-text: #f2f2f2;
-	--color-accent1: #007a7a;
-	--color-accent1-faint: #004040;
-	--color-accent2: #7a0000;
-	--color-accent2-faint: #3d0000;
+	--color-background-primary: #00c3e3;
+	--color-text-primary: #111827;
+	--color-background-primary-focus: #008da1;
+	--color-text-primary-focus: #f9fafb;
+	--color-background-primary-active: #007082;
+	--color-text-primary-active: #f9fafb;
+	--color-background-primary-disable: #374151;
+	--color-text-primary-disable: #f9fafb;
+
+	// --color-background: #f9fafb;
+	// --color-section-background: #e5e7eb;
+
+	// --color-primary: #00c3e3;
+	// --color-primary-dark: #008da1;
+	// --color-primary-light: #7ee8f5;
+
+	// --color-text: #1f2937;
+	// --color-text-secondary: #4b5563;
+
+	// --color-text: #1f2937;
+	// --color-accent1: #00c3e3;
+	// --color-accent1-faint: #004040;
+	// --color-accent2: #7a0000;
+	// --color-accent2-faint: #3d0000;
 }
 
 * {
@@ -89,8 +110,8 @@ body {
 }
 
 button {
-	color: var(--color-text);
-	background: var(--color-accent1-faint);
+	color: var(--color-text-primary);
+	background: var(--color-background-primary);
 	font-family: var(--font-normal);
 	border: none;
 	user-select: none;
@@ -102,7 +123,13 @@ button {
 	}
 
 	&.focused {
-		background: var(--color-accent1);
+		background: var(--color-background-primary-focus);
+		color: var(--color-text-primary-focus);
+	}
+
+	&:active {
+		background: var(--color-background-primary-active);
+		color: var(--color-text-primary-active);
 	}
 }
 

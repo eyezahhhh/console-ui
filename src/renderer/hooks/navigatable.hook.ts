@@ -40,6 +40,8 @@ export default function useNavigatable<T extends HTMLElement>(
 				[GamepadButtonId.D_RIGHT]: MovementAction.RIGHT,
 				[GamepadButtonId.B]: MovementAction.BACK,
 				[GamepadButtonId.A]: MovementAction.ENTER,
+				[GamepadButtonId.X]: MovementAction.DELETE,
+				[GamepadButtonId.Y]: MovementAction.OPTIONS,
 			};
 
 			const action = buttons[buttonId];
