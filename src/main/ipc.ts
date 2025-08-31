@@ -54,7 +54,7 @@ export class IpcMain {
 			width: 800,
 			height: 480,
 			fullscreen: this.settings.get().startFullscreen,
-			// frame: false,
+			frame: false,
 			webPreferences: {
 				nodeIntegration: true,
 				devTools: this.isDev,
