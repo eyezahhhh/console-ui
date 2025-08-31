@@ -18,6 +18,7 @@ interface Props extends IFocusableProps {
 	onBack?: (key: {}) => void;
 	onMenu?: (key: {}) => void;
 	onOptions?: (key: {}) => void;
+	onDelete?: (key: {}) => void;
 }
 
 export function Button({
@@ -36,6 +37,7 @@ export function Button({
 	onBack,
 	onMenu,
 	onOptions,
+	onDelete,
 }: Props) {
 	const move = (action: MovementAction) => {
 		if (action == MovementAction.ENTER) {
@@ -51,6 +53,7 @@ export function Button({
 			[MovementAction.BACK]: onBack,
 			[MovementAction.MENU]: onMenu,
 			[MovementAction.OPTIONS]: onOptions,
+			[MovementAction.DELETE]: onDelete,
 		};
 
 		const callback = callbacks[action];

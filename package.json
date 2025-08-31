@@ -14,8 +14,8 @@
 		"format": "prettier src --write"
 	},
 	"keywords": [],
-	"author": "",
-	"license": "ISC",
+	"author": "eyezah <console-ui@eyezah.com>",
+	"license": "MIT",
 	"devDependencies": {
 		"@types/bonjour": "^3.5.13",
 		"@types/command-exists": "^1.2.3",
@@ -41,13 +41,18 @@
 	},
 	"build": {
 		"appId": "com.eyezah.consoleui",
+		"productName": "Console UI",
 		"files": [
 			"transpile/**/*",
 			"assets/**/*",
 			"package.json"
 		],
 		"linux": {
-			"target": "AppImage"
+			"target": [
+				"AppImage",
+				"deb",
+				"rpm"
+			]
 		}
 	},
 	"dependencies": {
