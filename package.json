@@ -1,6 +1,6 @@
 {
 	"name": "console-ui",
-	"version": "1.0.0",
+	"version": "v0.0.1",
 	"description": "",
 	"main": "transpile/main/main.js",
 	"scripts": {
