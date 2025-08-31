@@ -63,6 +63,10 @@ function Key({
 				return "⇪";
 			case "exit":
 				return "✖";
+			case "left":
+				return "←";
+			case "right":
+				return "→";
 			default:
 				return usingLetter.split("_").join(""); // underscores allow for duplicates
 		}
@@ -153,6 +157,16 @@ export function OnScreenKeyboard({
 				return setUnfocused(MovementAction.ENTER);
 			case "exit":
 				return setUnfocused(MovementAction.BACK);
+			case "left":
+				return onChange?.(value, [
+					Math.max(selection[0] - 1, 0),
+					Math.max(selection[0] - 1, 0),
+				]);
+			case "right":
+				return onChange?.(value, [
+					Math.min(selection[1] + 1, value.length),
+					Math.min(selection[1] + 1, value.length),
+				]);
 			case "backspace":
 				if (selection[0] == selection[1]) {
 					if (!selection[0]) {
@@ -200,7 +214,13 @@ export function OnScreenKeyboard({
 			index={index}
 			direction="vertical"
 			className={styles.container}
-			setUnfocused={setUnfocused}
+			setUnfocused={(action) => {
+				if (action == MovementAction.DELETE) {
+					press("backspace");
+				} else {
+					setUnfocused(action);
+				}
+			}}
 		>
 			{keymapLayout.map((row, rowIndex) => (props) => (
 				<NavList {...props} direction="horizontal" className={styles.row}>
