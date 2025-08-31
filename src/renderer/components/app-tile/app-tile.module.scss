@@ -1,4 +1,11 @@
 .container {
 	height: 300px;
 	width: 200px;
+	background: var(--color-background-surface);
+	color: var(--color-text);
+
+	&.focused {
+		background: var(--color-background-primary-focus);
+		color: var(--color-text-primary-focus);
+	}
 }

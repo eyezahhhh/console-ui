@@ -1,5 +1,4 @@
 import ISettings from "@interface/settings.interface";
-import MoonlightCodec from "@type/moonlight-codec.type";
 import { Emitter } from "@util/emitter.util";
 import { app } from "electron";
 import { readFile, writeFile } from "fs";
