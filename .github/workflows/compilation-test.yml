@@ -1,0 +1,36 @@
+name: Compilation Test
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - name: Checkout git repo
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: Use Volta to setup Node and NPM
+        uses: volta-cli/action@v4
+
+      - name: Install dependencies
+        run: |
+          npm ci
+
+      - name: Compile main
+        run: |
+          npm run build:main
+
+      - name: Compile renderer
+        run: |
+          npm run build:renderer
