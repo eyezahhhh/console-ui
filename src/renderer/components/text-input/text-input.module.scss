@@ -1,15 +1,17 @@
 .input {
 	font-size: 2rem;
-	background: var(--color-accent1-faint);
+	background: var(--color-background-surface);
 	color: var(--color-text);
-	border: none;
+	border: 1px solid var(--color-background-surface-focus);
 	padding: 12px 16px;
 	margin: 6px;
+	width: 500px;
+
+	&::placeholder {
+		color: var(--color-text-secondary);
+	}
 
 	&.focused {
-		background: var(--color-accent1);
-
-		outline: 2px solid var(--color-accent1-faint);
-		outline-offset: 4px;
+		border-color: var(--color-background-primary);
 	}
 }

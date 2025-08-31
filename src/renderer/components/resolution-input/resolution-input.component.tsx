@@ -23,6 +23,10 @@ export function ResolutionInput({
 			return;
 		}
 
+		if (int <= 0 || int > 1_000_000) {
+			return;
+		}
+
 		const newRes = [...resolution] as [number, number];
 		newRes[index] = int;
 		onChange?.(newRes);

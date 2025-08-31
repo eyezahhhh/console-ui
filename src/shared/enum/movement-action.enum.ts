@@ -7,6 +7,7 @@ enum MovementAction {
 	BACK = "back",
 	MENU = "menu",
 	OPTIONS = "options",
+	DELETE = "delete",
 }
 
 export default MovementAction;

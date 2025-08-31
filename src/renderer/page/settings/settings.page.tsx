@@ -70,6 +70,9 @@ export function SettingsPage(props: IFocusableProps) {
 		if (greaterThan0 && int <= 0) {
 			return;
 		}
+		if (int > 1_000_000_000) {
+			return;
+		}
 		callback(int);
 	};
 
@@ -86,6 +89,7 @@ export function SettingsPage(props: IFocusableProps) {
 					{...props}
 					value={moonlightCommand}
 					onChange={setMoonlightCommand}
+					placeholder="moonlight"
 				/>
 			)}
 			<span className={styles.label}>Resolution</span>

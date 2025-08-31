@@ -61,6 +61,12 @@ function Key({
 				return "↵";
 			case "capslock":
 				return "⇪";
+			case "exit":
+				return "✖";
+			case "left":
+				return "←";
+			case "right":
+				return "→";
 			default:
 				return usingLetter.split("_").join(""); // underscores allow for duplicates
 		}
@@ -123,7 +129,7 @@ function Key({
 interface Props extends IFocusableProps {
 	value: string;
 	selection: [number, number];
-	onChange?: (value: string) => void;
+	onChange?: (value: string, selection: [number, number]) => void;
 	keymap?: OnScreenKeyboardKeymap;
 }
 
@@ -149,15 +155,33 @@ export function OnScreenKeyboard({
 				return setShift(!shift);
 			case "enter":
 				return setUnfocused(MovementAction.ENTER);
+			case "exit":
+				return setUnfocused(MovementAction.BACK);
+			case "left":
+				return onChange?.(value, [
+					Math.max(selection[0] - 1, 0),
+					Math.max(selection[0] - 1, 0),
+				]);
+			case "right":
+				return onChange?.(value, [
+					Math.min(selection[1] + 1, value.length),
+					Math.min(selection[1] + 1, value.length),
+				]);
 			case "backspace":
 				if (selection[0] == selection[1]) {
 					if (!selection[0]) {
 						// backspacing at the start of the input does nothing
 						return;
 					}
-					onChange?.(splice(value, selection[0] - 1, 1)); // no text is selected. delete 1 char
+					onChange?.(splice(value, selection[0] - 1, 1), [
+						selection[0] - 1,
+						selection[0] - 1,
+					]); // no text is selected. delete 1 char
 				} else {
-					onChange?.(splice(value, selection[0], selection[1] - selection[0])); // text is selected. delete it
+					onChange?.(splice(value, selection[0], selection[1] - selection[0]), [
+						selection[0],
+						selection[0],
+					]); // text is selected. delete it
 				}
 				return;
 			default: {
@@ -169,10 +193,14 @@ export function OnScreenKeyboard({
 					letter = " ";
 				}
 				if (selection[0] == selection[1]) {
-					onChange?.(splice(value, selection[0], 0, letter));
+					onChange?.(splice(value, selection[0], 0, letter), [
+						selection[0] + 1,
+						selection[0] + 1,
+					]);
 				} else {
 					onChange?.(
 						splice(value, selection[0], selection[1] - selection[0], letter),
+						[selection[0] + 1, selection[0] + 1],
 					);
 				}
 				setShift(false);
@@ -186,7 +214,13 @@ export function OnScreenKeyboard({
 			index={index}
 			direction="vertical"
 			className={styles.container}
-			setUnfocused={setUnfocused}
+			setUnfocused={(action) => {
+				if (action == MovementAction.DELETE) {
+					press("backspace");
+				} else {
+					setUnfocused(action);
+				}
+			}}
 		>
 			{keymapLayout.map((row, rowIndex) => (props) => (
 				<NavList {...props} direction="horizontal" className={styles.row}>
