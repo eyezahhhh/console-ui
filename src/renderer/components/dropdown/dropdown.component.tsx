@@ -5,10 +5,10 @@ import styles from "./dropdown.module.scss";
 import { cc } from "@util/string.util";
 import { useEffect, useMemo, useState } from "react";
 import NavList from "@component/nav-list";
-import Button from "@component/button";
 import useFocusStore from "@state/focus.store";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
+import Clickable from "@component/clickable";
 
 interface Props extends IFocusableProps {
 	options: string[];
@@ -90,7 +90,7 @@ export function Dropdown({
 					setUnfocused={() => {}}
 				>
 					{options.map((option, index) => (props) => (
-						<Button
+						<Clickable
 							{...props}
 							className={styles.option}
 							focusedClassName={styles.focused}
@@ -111,7 +111,7 @@ export function Dropdown({
 							}}
 						>
 							{option}
-						</Button>
+						</Clickable>
 					))}
 				</NavList>
 			</div>
