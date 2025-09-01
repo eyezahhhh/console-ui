@@ -3,7 +3,7 @@ import MainToRendererListener from "@type/main-to-renderer-listener.type";
 import MainToRendererHandler from "@type/main-to-renderer-handler.type";
 import TupleToFunctionAsync from "@type/tuple-to-function-async.type";
 import { StandaloneLogger } from "./logger";
-import { Emitter, StandaloneEmitter } from "@util/emitter.util";
+import { StandaloneEmitter } from "@util/emitter.util";
 import RendererToMainListener from "@type/renderer-to-main-listener.type";
 import path from "path";
 import Settings from "./settings";
