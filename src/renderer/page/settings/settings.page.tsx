@@ -39,6 +39,9 @@ export function SettingsPage(props: IFocusableProps) {
 	const [platform, setPlatform] = useState(settings.platform);
 	const [quitAppAfter, setQuitAppAfter] = useState(settings.quitAppAfter);
 	const [kioskMode, setKioskMode] = useState(settings.kioskMode);
+	const [startingResolution, setStartingResolution] = useState(
+		settings.startingResolution,
+	);
 	const [startFullscreen, setStartFullscreen] = useState(
 		settings.startFullscreen,
 	);
@@ -58,6 +61,7 @@ export function SettingsPage(props: IFocusableProps) {
 		setPlatform(settings.platform);
 		setQuitAppAfter(settings.quitAppAfter);
 		setKioskMode(settings.kioskMode);
+		setStartingResolution(settings.startingResolution);
 	}, [settings]);
 
 	const changeIfInt = (
@@ -217,6 +221,14 @@ export function SettingsPage(props: IFocusableProps) {
 			{(props) => (
 				<Toggle {...props} enabled={kioskMode} onChange={setKioskMode} />
 			)}
+			<span className={styles.label}>App size</span>
+			{(props) => (
+				<ResolutionInput
+					{...props}
+					resolution={startingResolution}
+					onChange={setStartingResolution}
+				/>
+			)}
 			{(props) => (
 				<Button
 					{...props}
@@ -240,6 +252,7 @@ export function SettingsPage(props: IFocusableProps) {
 								quitAppAfter,
 								startFullscreen,
 								kioskMode,
+								startingResolution,
 							})
 							.catch(console.error)
 							.finally(() => {
