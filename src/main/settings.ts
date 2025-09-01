@@ -143,6 +143,15 @@ export default class Settings extends Emitter<Events> {
 				settings.kioskMode = DEFAULT_SETTINGS.kioskMode;
 			}
 
+			if (
+				!Array.isArray(settings.startingResolution) ||
+				settings.startingResolution.length != 2 ||
+				settings.startingResolution.some((num) => !isNatural(num))
+			) {
+				this.logger.warn(`"startingResolution" invalid`);
+				settings.startingResolution = DEFAULT_SETTINGS.startingResolution;
+			}
+
 			const keys = Object.keys(DEFAULT_SETTINGS) as (keyof ISettings)[];
 			const clone = structuredClone(settings);
 			for (let key of Object.keys(clone)) {

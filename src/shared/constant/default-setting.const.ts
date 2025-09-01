@@ -15,5 +15,6 @@ const DEFAULT_SETTINGS: ISettings = {
 	quitAppAfter: false,
 	startFullscreen: false,
 	kioskMode: false,
+	startingResolution: [800, 480],
 };
 export default DEFAULT_SETTINGS;
