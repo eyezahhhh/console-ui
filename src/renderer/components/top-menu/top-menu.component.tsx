@@ -7,18 +7,31 @@ import useGamepads from "@hook/gamepads.hook";
 import GamepadIndicator from "@component/gamepad-indicator";
 import PowerMenu from "@component/power-menu";
 import { useState } from "react";
-import { Computer, PowerSettingsNew, Settings } from "@mui/icons-material";
+import {
+	Computer,
+	PowerSettingsNew,
+	Settings,
+	SystemUpdateAlt,
+} from "@mui/icons-material";
+import useUpdate from "@hook/update.hook";
+import UpdateModal from "@component/update-modal";
 
 interface Props extends IFocusableProps {}
 
 export function TopMenu(props: Props) {
 	const navigate = useNavigate();
 	const gamepads = useGamepads();
+	const { availableUpdate } = useUpdate();
 	const [powerMenuOpen, setPowerMenuOpen] = useState(false);
+	const [updateModalOpen, setUpdateModalOpen] = useState(false);
 
 	return (
 		<div className={styles.container}>
 			<PowerMenu open={powerMenuOpen} onClose={() => setPowerMenuOpen(false)} />
+			<UpdateModal
+				open={updateModalOpen}
+				onClose={() => setUpdateModalOpen(false)}
+			/>
 			<div className={styles.gamepadsContainer}>
 				{gamepads.map((gamepad) => (
 					<GamepadIndicator key={gamepad.index} gamepadIndex={gamepad.index} />
@@ -35,15 +48,24 @@ export function TopMenu(props: Props) {
 					<TopMenuButton
 						{...props}
 						icon={<Computer />}
-						key={0}
+						key="machines"
 						onEnter={() => navigate("/")}
 					/>
 				)}
+				{(!!availableUpdate || true) &&
+					((props) => (
+						<TopMenuButton
+							{...props}
+							icon={<SystemUpdateAlt />}
+							key="update"
+							onEnter={() => setUpdateModalOpen(true)}
+						/>
+					))}
 				{(props) => (
 					<TopMenuButton
 						{...props}
 						icon={<Settings />}
-						key={1}
+						key="settings"
 						onEnter={() => navigate("/settings")}
 					/>
 				)}
@@ -51,7 +73,7 @@ export function TopMenu(props: Props) {
 					<TopMenuButton
 						{...props}
 						icon={<PowerSettingsNew />}
-						key={2}
+						key="power"
 						onEnter={() => setPowerMenuOpen(true)}
 					/>
 				)}
