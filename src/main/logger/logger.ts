@@ -67,6 +67,10 @@ export class Logger {
 		console.log(this.getPrefix(), ...params);
 	}
 
+	protected info(...params: any[]) {
+		console.info(this.getPrefix(), ...params);
+	}
+
 	protected warn(...params: any[]) {
 		console.warn(this.getPrefix(), ...params);
 	}
@@ -94,4 +98,5 @@ export class StandaloneLogger extends Logger {
 	public warn = super.warn;
 	public debug = super.debug;
 	public error = super.error;
+	public info = super.info;
 }

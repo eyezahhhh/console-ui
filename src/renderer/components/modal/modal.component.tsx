@@ -11,7 +11,7 @@ interface Props {
 	open: boolean;
 	onClose?: () => void;
 	children?: OptionalArray<
-		React.JSX.Element | ((props: IFocusableProps) => React.JSX.Element)
+		false | React.JSX.Element | ((props: IFocusableProps) => React.JSX.Element)
 	>;
 }
 

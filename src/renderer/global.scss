@@ -127,6 +127,11 @@ button {
 		color: var(--color-text-primary-focus);
 	}
 
+	&.disabled {
+		background: var(--color-background-primary-disable);
+		color: var(--color-text-primary-disable);
+	}
+
 	&:active {
 		background: var(--color-background-primary-active);
 		color: var(--color-text-primary-active);
