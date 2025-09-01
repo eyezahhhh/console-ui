@@ -55,6 +55,7 @@ export class IpcMain {
 			height: 480,
 			fullscreen: this.settings.get().startFullscreen,
 			frame: false,
+			kiosk: this.settings.get().kioskMode,
 			webPreferences: {
 				nodeIntegration: true,
 				devTools: this.isDev,
