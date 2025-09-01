@@ -1,7 +1,7 @@
 {
 	"name": "console-ui",
-	"version": "v0.0.1",
-	"description": "",
+	"version": "v0.0.2",
+	"description": "Console-style UI for Moonlight",
 	"main": "transpile/main/main.js",
 	"scripts": {
 		"dev:main": "npm run build:main && wait-on tcp:5173 && cross-env NODE_ENV=development ${ELECTRON_BIN:-electron} .",
