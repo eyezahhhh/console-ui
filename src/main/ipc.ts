@@ -50,11 +50,12 @@ export class IpcMain {
 			return this.window;
 		}
 
-		const fullscreen = this.settings.get().startFullscreen;
+		const settings = this.settings.get();
+
 		const window = new BrowserWindow({
-			width: 800,
-			height: 480,
-			fullscreen: fullscreen && process.platform != "linux",
+			width: settings.startingResolution[0],
+			height: settings.startingResolution[1],
+			fullscreen: settings.startFullscreen && process.platform != "linux",
 			frame: false,
 			kiosk: this.settings.get().kioskMode,
 			webPreferences: {
@@ -63,7 +64,7 @@ export class IpcMain {
 				preload: path.join(__dirname, "preload.js"),
 			},
 		});
-		if (fullscreen && process.platform == "linux") {
+		if (settings.startFullscreen && process.platform == "linux") {
 			// apply fullscreen afterwards for linux
 			window.setFullScreen(true);
 		}
