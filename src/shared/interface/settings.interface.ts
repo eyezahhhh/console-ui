@@ -16,4 +16,5 @@ export default interface ISettings {
 	quitAppAfter: boolean;
 	startFullscreen: boolean;
 	kioskMode: boolean;
+	startingResolution: [number, number];
 }
