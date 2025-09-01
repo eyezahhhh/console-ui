@@ -10,6 +10,7 @@ interface Props extends IFocusableProps {
 	className?: string;
 	focusedClassName?: string;
 	focusOnCreate?: boolean;
+	disabled?: boolean;
 	onMoveUp?: (key: {}) => void;
 	onMoveDown?: (key: {}) => void;
 	onMoveLeft?: (key: {}) => void;
@@ -29,6 +30,7 @@ export function Button({
 	className,
 	focusedClassName,
 	focusOnCreate,
+	disabled,
 	onMoveUp,
 	onMoveDown,
 	onMoveLeft,
@@ -82,6 +84,7 @@ export function Button({
 			ref={ref}
 			className={cc(
 				className,
+				disabled && "disabled",
 				isFocused && focusedClassName,
 				isFocused && "focused",
 			)}

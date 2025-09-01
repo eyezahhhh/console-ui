@@ -4,6 +4,7 @@ import path from "path";
 import { MoonlightEmbeddedController } from "./moonlight-embedded-controller";
 import { IpcMain } from "./ipc";
 import Settings from "./settings";
+import Updater from "./updater";
 
 const logger = new StandaloneLogger("Main");
 
@@ -18,6 +19,7 @@ const settings = new Settings();
 
 Promise.all([app.whenReady(), settings.read()]).then(() => {
 	let getMoonlight: () => MoonlightEmbeddedController;
+	let getUpdater: () => Updater;
 
 	const ipc = new IpcMain(
 		{
@@ -43,10 +45,19 @@ Promise.all([app.whenReady(), settings.read()]).then(() => {
 					return false;
 				}
 			},
+			get_available_update: () => getUpdater().getAvailableUpdate(),
+			get_is_update_checking: () => getUpdater().isChecking(),
+			get_update_status: () => [
+				getUpdater().isDownloading(),
+				getUpdater().getDownloadProgress(),
+			],
+			get_version: () => app.getVersion(),
 		},
 		IS_DEV,
 		settings,
 	);
+	const updater = new Updater(ipc);
+	getUpdater = () => updater;
 
 	ipc.addEventListener("quit", () => {
 		app.quit();

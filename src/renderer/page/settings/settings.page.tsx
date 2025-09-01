@@ -12,11 +12,15 @@ import ISettings from "@interface/settings.interface";
 import styles from "./settings.module.scss";
 import Button from "@component/button";
 import { useNavigate } from "react-router";
+import useUpdate from "@hook/update.hook";
+import useAppVersion from "@hook/app-version.hook";
 
 export function SettingsPage(props: IFocusableProps) {
 	const settings = useSettings();
 	const navigate = useNavigate();
+	const { isChecking: isUpdateChecking } = useUpdate();
 	const [isSaving, setIsSaving] = useState(false);
+	const appVersion = useAppVersion();
 
 	const [moonlightCommand, setMoonlightCommand] = useState(
 		settings.moonlightCommand,
@@ -78,11 +82,22 @@ export function SettingsPage(props: IFocusableProps) {
 
 	return (
 		<NavList {...props} direction="vertical" className={styles.container}>
+			<span className={styles.version}>Console UI {appVersion}</span>
+			{(props) => (
+				<Button
+					{...props}
+					onEnter={() => window.ipc.send("check_updates")}
+					disabled={isUpdateChecking}
+				>
+					Check for updates
+				</Button>
+			)}
 			{(props) => (
 				<Button {...props} onEnter={() => navigate("/gamepad-debug")}>
 					Debug Gamepads
 				</Button>
 			)}
+
 			<span className={styles.label}>Moonlight-Embedded command</span>
 			{(props) => (
 				<TextInput
