@@ -9,15 +9,49 @@ interface Props {
 
 export function PowerMenu({ open, onClose }: Props) {
 	return (
-		<Modal open={open} onClose={onClose}>
+		<Modal open={open} onClose={onClose} className={styles.modal}>
 			{(props) => (
 				<Button
 					{...props}
+					className={styles.button}
+					onEnter={() => {
+						window.ipc.send("restart");
+					}}
+				>
+					Restart Console UI
+				</Button>
+			)}
+			{(props) => (
+				<Button
+					{...props}
+					className={styles.button}
 					onEnter={() => {
 						window.ipc.send("quit");
 					}}
 				>
 					Exit Console UI
+				</Button>
+			)}
+			{(props) => (
+				<Button
+					{...props}
+					className={styles.button}
+					onEnter={() => {
+						window.ipc.send("reboot");
+					}}
+				>
+					Restart Computer
+				</Button>
+			)}
+			{(props) => (
+				<Button
+					{...props}
+					className={styles.button}
+					onEnter={() => {
+						window.ipc.send("shutdown");
+					}}
+				>
+					Shutdown Computer
 				</Button>
 			)}
 		</Modal>

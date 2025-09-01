@@ -1,7 +1,7 @@
 import { JSX } from "react";
 import styles from "./top-menu-button.module.scss";
 import IFocusableProps from "@interface/focusable-props.interface";
-import Button from "@component/button";
+import Clickable from "@component/clickable";
 
 type Props = IFocusableProps & {
 	onEnter?: (key: {}) => void;
@@ -22,7 +22,7 @@ export function TopMenuButton({
 	...props
 }: Props) {
 	return (
-		<Button
+		<Clickable
 			parentKey={parentKey}
 			setUnfocused={setUnfocused}
 			index={index}
@@ -35,6 +35,6 @@ export function TopMenuButton({
 			) : (
 				<div className={styles.icon}>{props.icon}</div>
 			)}
-		</Button>
+		</Clickable>
 	);
 }

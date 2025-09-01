@@ -5,6 +5,7 @@ import { MoonlightEmbeddedController } from "./moonlight-embedded-controller";
 import { IpcMain } from "./ipc";
 import Settings from "./settings";
 import Updater from "./updater";
+import { reboot, shutdown } from "./power";
 
 const logger = new StandaloneLogger("Main");
 
@@ -59,9 +60,14 @@ Promise.all([app.whenReady(), settings.read()]).then(() => {
 	const updater = new Updater(ipc);
 	getUpdater = () => updater;
 
-	ipc.addEventListener("quit", () => {
+	ipc.addEventListener("quit", () => app.quit());
+	ipc.addEventListener("restart", () => {
+		app.relaunch();
 		app.quit();
 	});
+
+	ipc.addEventListener("shutdown", () => shutdown());
+	ipc.addEventListener("reboot", () => reboot());
 
 	settings.addEventListener("updated", (settings) =>
 		ipc.send("settings", settings),
