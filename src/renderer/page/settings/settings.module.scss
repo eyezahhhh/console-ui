@@ -4,6 +4,12 @@
 	align-items: flex-start;
 	gap: 4px;
 
+	.version {
+		font-size: 2rem;
+		margin: 16px 0;
+		display: block;
+	}
+
 	.label {
 		font-size: 1.5rem;
 		margin-top: 8px;
