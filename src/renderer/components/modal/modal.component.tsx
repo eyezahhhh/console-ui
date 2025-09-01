@@ -13,9 +13,10 @@ interface Props {
 	children?: OptionalArray<
 		false | React.JSX.Element | ((props: IFocusableProps) => React.JSX.Element)
 	>;
+	className?: string;
 }
 
-export function Modal({ open, children, onClose }: Props) {
+export function Modal({ open, children, onClose, className }: Props) {
 	const move = (action: MovementAction) => {
 		if (action == MovementAction.BACK) {
 			onClose?.();
@@ -54,7 +55,7 @@ export function Modal({ open, children, onClose }: Props) {
 	return (
 		<div className={cc(styles.container, open && styles.open)}>
 			<NavList
-				className={styles.modal}
+				className={cc(styles.modal, className)}
 				parentKey={key}
 				index={0}
 				setUnfocused={move}
