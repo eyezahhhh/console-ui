@@ -1,13 +1,9 @@
 import { useMemo } from "react";
 import styles from "./machine.module.scss";
 import IMachine from "@interface/machine.interface";
-import useNavigatable from "@hook/navigatable.hook";
 import IFocusableProps from "@interface/focusable-props.interface";
-import { cc } from "@util/string.util";
-import useFocusStore from "@state/focus.store";
-import MovementAction from "@enum/movement-action.enum";
 import { useNavigate } from "react-router";
-import Button from "@component/button";
+import Clickable from "@component/clickable";
 
 interface Props extends IFocusableProps {
 	machine?: IMachine;
@@ -20,7 +16,7 @@ export function Machine({ machine, parentKey, setUnfocused, index }: Props) {
 	}, [machine]);
 
 	return (
-		<Button
+		<Clickable
 			parentKey={parentKey}
 			setUnfocused={setUnfocused}
 			index={index}
@@ -31,6 +27,6 @@ export function Machine({ machine, parentKey, setUnfocused, index }: Props) {
 			<div className={styles.content}>
 				<span className={styles.title}>{name}</span>
 			</div>
-		</Button>
+		</Clickable>
 	);
 }
