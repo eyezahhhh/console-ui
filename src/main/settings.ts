@@ -63,7 +63,7 @@ export default class Settings extends Emitter<Events> {
 				!settings.moonlightCommand.length
 			) {
 				this.logger.warn(`"moonlightCommand" invalid`);
-				return false;
+				settings.moonlightCommand = DEFAULT_SETTINGS.moonlightCommand;
 			}
 
 			if (
@@ -72,37 +72,37 @@ export default class Settings extends Emitter<Events> {
 				settings.resolution.some((num) => !isNatural(num))
 			) {
 				this.logger.warn(`"resolution" invalid`);
-				return false;
+				settings.resolution = DEFAULT_SETTINGS.resolution;
 			}
 
 			if (![0, 90, 180, 270].includes(settings.rotation)) {
 				this.logger.warn(`"rotation" invalid`);
-				return false;
+				settings.rotation = DEFAULT_SETTINGS.rotation;
 			}
 
 			if (!isNatural(settings.fps)) {
 				this.logger.warn(`"fps" invalid`);
-				return false;
+				settings.fps = DEFAULT_SETTINGS.fps;
 			}
 
 			if (!isNatural(settings.bitrate)) {
 				this.logger.warn(`"bitrate" invalid`);
-				return false;
+				settings.bitrate = DEFAULT_SETTINGS.bitrate;
 			}
 
 			if (!isNatural(settings.packetSize)) {
 				this.logger.warn(`"packetSize" invalid`);
-				return false;
+				settings.packetSize = DEFAULT_SETTINGS.packetSize;
 			}
 
 			if (!MOONLIGHT_CODECS.includes(settings.codec)) {
 				this.logger.warn(`"codec" invalid`);
-				return false;
+				settings.codec = DEFAULT_SETTINGS.codec;
 			}
 
 			if (typeof settings.hdr != "boolean") {
 				this.logger.warn(`"hdr" invalid`);
-				return false;
+				settings.hdr = DEFAULT_SETTINGS.hdr;
 			}
 
 			if (
@@ -110,7 +110,7 @@ export default class Settings extends Emitter<Events> {
 				settings.remoteOptimizations != "auto"
 			) {
 				this.logger.warn(`"remoteOptimizations" invalid`);
-				return false;
+				settings.remoteOptimizations = DEFAULT_SETTINGS.remoteOptimizations;
 			}
 
 			const surroundSound: ISettings["surroundSound"][] = [
@@ -120,22 +120,27 @@ export default class Settings extends Emitter<Events> {
 			];
 			if (!surroundSound.includes(settings.surroundSound)) {
 				this.logger.warn(`"surroundSound" invalid`);
-				return false;
+				settings.surroundSound = DEFAULT_SETTINGS.surroundSound;
 			}
 
 			if (!MOONLIGHT_PLATFORMS.includes(settings.platform)) {
 				this.logger.warn(`"platform" invalid`);
-				return false;
+				settings.platform = DEFAULT_SETTINGS.platform;
 			}
 
 			if (typeof settings.quitAppAfter != "boolean") {
 				this.logger.warn(`"quitAppAfter" invalid`);
-				return false;
+				settings.quitAppAfter = DEFAULT_SETTINGS.quitAppAfter;
 			}
 
 			if (typeof settings.startFullscreen != "boolean") {
 				this.logger.warn(`"startFullscreen" invalid`);
-				return false;
+				settings.startFullscreen = DEFAULT_SETTINGS.startFullscreen;
+			}
+
+			if (typeof settings.kioskMode != "boolean") {
+				this.logger.warn(`"kioskMode" invalid`);
+				settings.kioskMode = DEFAULT_SETTINGS.kioskMode;
 			}
 
 			const keys = Object.keys(DEFAULT_SETTINGS) as (keyof ISettings)[];

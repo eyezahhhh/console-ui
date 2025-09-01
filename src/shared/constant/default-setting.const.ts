@@ -14,5 +14,6 @@ const DEFAULT_SETTINGS: ISettings = {
 	platform: "auto",
 	quitAppAfter: false,
 	startFullscreen: false,
+	kioskMode: false,
 };
 export default DEFAULT_SETTINGS;

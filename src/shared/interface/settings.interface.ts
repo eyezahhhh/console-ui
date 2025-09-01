@@ -15,4 +15,5 @@ export default interface ISettings {
 	platform: MoonlightPlatform;
 	quitAppAfter: boolean;
 	startFullscreen: boolean;
+	kioskMode: boolean;
 }
