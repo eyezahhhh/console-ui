@@ -38,6 +38,7 @@ export function SettingsPage(props: IFocusableProps) {
 	const [surroundSound, setSurroundSound] = useState(settings.surroundSound);
 	const [platform, setPlatform] = useState(settings.platform);
 	const [quitAppAfter, setQuitAppAfter] = useState(settings.quitAppAfter);
+	const [kioskMode, setKioskMode] = useState(settings.kioskMode);
 	const [startFullscreen, setStartFullscreen] = useState(
 		settings.startFullscreen,
 	);
@@ -56,6 +57,7 @@ export function SettingsPage(props: IFocusableProps) {
 		setSurroundSound(settings.surroundSound);
 		setPlatform(settings.platform);
 		setQuitAppAfter(settings.quitAppAfter);
+		setKioskMode(settings.kioskMode);
 	}, [settings]);
 
 	const changeIfInt = (
@@ -211,6 +213,10 @@ export function SettingsPage(props: IFocusableProps) {
 					onChange={setStartFullscreen}
 				/>
 			)}
+			<span className={styles.label}>Kiosk mode</span>
+			{(props) => (
+				<Toggle {...props} enabled={kioskMode} onChange={setKioskMode} />
+			)}
 			{(props) => (
 				<Button
 					{...props}
@@ -233,6 +239,7 @@ export function SettingsPage(props: IFocusableProps) {
 								platform,
 								quitAppAfter,
 								startFullscreen,
+								kioskMode,
 							})
 							.catch(console.error)
 							.finally(() => {
