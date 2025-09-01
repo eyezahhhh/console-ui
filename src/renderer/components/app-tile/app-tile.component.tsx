@@ -1,8 +1,8 @@
 import IFocusableProps from "@interface/focusable-props.interface";
 import styles from "./app-tile.module.scss";
 import ISunshineApp from "@interface/sunshine-app.interface";
-import Button from "@component/button";
 import IMachine from "@interface/machine.interface";
+import Clickable from "@component/clickable";
 
 interface Props extends IFocusableProps {
 	app: ISunshineApp;
@@ -19,7 +19,7 @@ export function AppTile({
 	machine,
 }: Props) {
 	return (
-		<Button
+		<Clickable
 			parentKey={parentKey}
 			index={index}
 			setUnfocused={setUnfocused}
@@ -31,6 +31,6 @@ export function AppTile({
 			}}
 		>
 			{app.AppTitle}
-		</Button>
+		</Clickable>
 	);
 }

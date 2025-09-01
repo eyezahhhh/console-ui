@@ -38,8 +38,8 @@
 		width: 200%;
 		background: linear-gradient(
 			90deg,
-			var(--color-primary-dark) 0%,
-			var(--color-primary-light) 50%,
+			var(--color-background-primary) 0%,
+			var(--color-background-primary-focus) 50%,
 			var(--color-text) 100%
 		);
 		z-index: -1;
