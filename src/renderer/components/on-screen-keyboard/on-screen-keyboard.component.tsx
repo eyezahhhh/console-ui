@@ -87,8 +87,9 @@ function Key({
 		parentKey,
 		index,
 		move,
-		undefined,
-		true,
+		{
+			dontFocusElement: true,
+		},
 	);
 	const { setFocused } = useFocusStore();
 

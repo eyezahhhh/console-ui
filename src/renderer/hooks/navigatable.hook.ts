@@ -4,12 +4,18 @@ import MovementAction from "@enum/movement-action.enum";
 import useGamepads from "./gamepads.hook";
 import GamepadButtonId from "../../shared/enum/gamepad-button-id.enum";
 
+interface Props {
+	onFocus?: (fromComponent: Connection | null, action: MovementAction) => void;
+	dontFocusElement?: boolean;
+	disabled?: boolean;
+	focusable?: boolean;
+}
+
 export default function useNavigatable<T extends HTMLElement>(
 	parentKey: {} | null,
 	index: number,
 	onMoveAction: (action: MovementAction) => void,
-	onFocus?: (fromComponent: Connection | null, action: MovementAction) => void,
-	dontFocusElement?: boolean,
+	{ onFocus, dontFocusElement, disabled, focusable }: Props = {},
 ) {
 	const moveRef = useRef<(action: MovementAction) => void>(onMoveAction);
 	useEffect(() => {
@@ -28,6 +34,7 @@ export default function useNavigatable<T extends HTMLElement>(
 		lastFocusedComponent,
 		lastAction,
 	} = useFocusStore();
+
 	useGamepads({
 		onButtonPress(buttonId) {
 			if (key !== focusedComponent?.key) {
@@ -52,18 +59,25 @@ export default function useNavigatable<T extends HTMLElement>(
 	});
 
 	useEffect(() => {
-		if (!ref) {
+		if (!ref || disabled) {
 			return;
 		}
 
-		const deregister = registerElement(key, parentKey, index, ref, move);
+		const deregister = registerElement({
+			key,
+			parentKey,
+			index,
+			ref,
+			move,
+			focusable: focusable !== false,
+		});
 		setIsRegistered(true);
 
 		return () => {
 			setIsRegistered(false);
 			deregister();
 		};
-	}, [ref, key, parentKey, index, move]);
+	}, [ref, key, parentKey, index, move, !!disabled, focusable]);
 
 	useEffect(() => {
 		if (!ref) {

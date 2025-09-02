@@ -48,6 +48,12 @@ export function HomePage(props: IFocusableProps) {
 					New Machine
 				</Button>
 			)}
+			{(props) => <NavList {...props} direction="vertical" />}
+			{(props) => (
+				<NavList {...props} direction="vertical">
+					{(props) => <Button {...props}>Test Button</Button>}
+				</NavList>
+			)}
 		</NavList>
 	);
 }
