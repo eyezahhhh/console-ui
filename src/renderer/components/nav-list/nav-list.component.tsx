@@ -32,47 +32,47 @@ export function NavList({
 		},
 		{
 			focusable: false,
-			onFocus: (lastComponent, action) => {
-				const lastRef = lastComponent?.ref;
-				if (!lastRef) {
-					// don't know what the last component was, select first component as fallback
-					setFocusedFromParent(key, 0, action);
-					return;
-				}
+			// onFocus: (lastComponent, action) => {
+			// 	const lastRef = lastComponent?.ref;
+			// 	if (!lastRef) {
+			// 		// don't know what the last component was, select first component as fallback
+			// 		setFocusedFromParent(key, 0, action);
+			// 		return;
+			// 	}
 
-				const children = getChildrenOf(key);
+			// 	const children = getChildrenOf(key);
 
-				if (!children) {
-					// todo: implement
-					console.error("Nav list has no children! Don't know what to do");
-					return;
-				}
+			// 	if (!children) {
+			// 		// todo: implement
+			// 		console.error("Nav list has no children! Don't know what to do");
+			// 		return;
+			// 	}
 
-				const getCenter = (rect: DOMRect) => {
-					return {
-						x: rect.x + rect.width / 2,
-						y: rect.y + rect.height / 2,
-					};
-				};
+			// 	const getCenter = (rect: DOMRect) => {
+			// 		return {
+			// 			x: rect.x + rect.width / 2,
+			// 			y: rect.y + rect.height / 2,
+			// 		};
+			// 	};
 
-				const lastCenter = getCenter(lastRef.getBoundingClientRect());
+			// 	const lastCenter = getCenter(lastRef.getBoundingClientRect());
 
-				const childrenCenters = children.map((child) => {
-					const center = getCenter(child.ref.getBoundingClientRect());
-					const xDistance = Math.abs(center.x - lastCenter.x);
-					const yDistance = Math.abs(center.y - lastCenter.y);
-					return {
-						child,
-						distance: xDistance + yDistance,
-					};
-				});
-				childrenCenters.sort((a, b) => a.distance - b.distance);
-				if (childrenCenters.length) {
-					setFocusedFromParent(key, childrenCenters[0].child.index, action);
-				} else {
-					setUnfocused(action);
-				}
-			},
+			// 	const childrenCenters = children.map((child) => {
+			// 		const center = getCenter(child.ref.getBoundingClientRect());
+			// 		const xDistance = Math.abs(center.x - lastCenter.x);
+			// 		const yDistance = Math.abs(center.y - lastCenter.y);
+			// 		return {
+			// 			child,
+			// 			distance: xDistance + yDistance,
+			// 		};
+			// 	});
+			// 	childrenCenters.sort((a, b) => a.distance - b.distance);
+			// 	if (childrenCenters.length) {
+			// 		setFocusedFromParent(key, childrenCenters[0].child.index, action);
+			// 	} else {
+			// 		setUnfocused(action);
+			// 	}
+			// },
 		},
 	);
 
