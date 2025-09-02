@@ -152,6 +152,14 @@ export default class Settings extends Emitter<Events> {
 				settings.startingResolution = DEFAULT_SETTINGS.startingResolution;
 			}
 
+			if (
+				typeof settings.exitCommand != "string" &&
+				settings.exitCommand !== null
+			) {
+				this.logger.warn(`"exitCommand" invalid`);
+				settings.exitCommand = DEFAULT_SETTINGS.exitCommand;
+			}
+
 			const keys = Object.keys(DEFAULT_SETTINGS) as (keyof ISettings)[];
 			const clone = structuredClone(settings);
 			for (let key of Object.keys(clone)) {
