@@ -16,5 +16,6 @@ const DEFAULT_SETTINGS: ISettings = {
 	startFullscreen: false,
 	kioskMode: false,
 	startingResolution: [800, 480],
+	exitCommand: null,
 };
 export default DEFAULT_SETTINGS;
