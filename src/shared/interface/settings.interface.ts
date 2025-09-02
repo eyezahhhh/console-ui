@@ -17,4 +17,5 @@ export default interface ISettings {
 	startFullscreen: boolean;
 	kioskMode: boolean;
 	startingResolution: [number, number];
+	exitCommand: string | null;
 }

@@ -45,6 +45,7 @@ export function SettingsPage(props: IFocusableProps) {
 	const [startFullscreen, setStartFullscreen] = useState(
 		settings.startFullscreen,
 	);
+	const [exitCommand, setExitCommand] = useState(settings.exitCommand);
 
 	useEffect(() => {
 		console.log("Settings changed:", settings);
@@ -62,6 +63,7 @@ export function SettingsPage(props: IFocusableProps) {
 		setQuitAppAfter(settings.quitAppAfter);
 		setKioskMode(settings.kioskMode);
 		setStartingResolution(settings.startingResolution);
+		setExitCommand(settings.exitCommand);
 	}, [settings]);
 
 	const changeIfInt = (
@@ -229,6 +231,14 @@ export function SettingsPage(props: IFocusableProps) {
 					onChange={setStartingResolution}
 				/>
 			)}
+			<span className={styles.label}>Exit command</span>
+			{(props) => (
+				<TextInput
+					{...props}
+					value={exitCommand || ""}
+					onChange={(value) => setExitCommand(value || null)}
+				/>
+			)}
 			{(props) => (
 				<Button
 					{...props}
@@ -253,6 +263,7 @@ export function SettingsPage(props: IFocusableProps) {
 								startFullscreen,
 								kioskMode,
 								startingResolution,
+								exitCommand,
 							})
 							.catch(console.error)
 							.finally(() => {
