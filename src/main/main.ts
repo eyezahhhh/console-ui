@@ -6,6 +6,7 @@ import { IpcMain } from "./ipc";
 import Settings from "./settings";
 import Updater from "./updater";
 import { reboot, shutdown } from "./power";
+import { spawn } from "child_process";
 
 const logger = new StandaloneLogger("Main");
 
@@ -60,7 +61,17 @@ Promise.all([app.whenReady(), settings.read()]).then(() => {
 	const updater = new Updater(ipc);
 	getUpdater = () => updater;
 
-	ipc.addEventListener("quit", () => app.quit());
+	ipc.addEventListener("quit", () => {
+		const command = settings.get().exitCommand;
+		if (command) {
+			const child = spawn(command, {
+				stdio: ["ignore", "ignore", "ignore"],
+				detached: true,
+			});
+			child.unref();
+		}
+		app.quit();
+	});
 	ipc.addEventListener("restart", () => {
 		app.relaunch();
 		app.quit();
