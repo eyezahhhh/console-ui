@@ -153,14 +153,18 @@ const useFocusStore = create<IFocusState>((set, get) => ({
 				.traverse(connectionInfo[0])
 				.filter((connection) => connection.focusable);
 			const target = get().getTargetLocation();
-			const connectionPositions = connections.map((connection) => {
+			let connectionPositions = connections.map((connection) => {
 				const box = connection.ref.getBoundingClientRect();
 				const position = [box.x + box.width / 2, box.y + box.height / 2];
-				const distance =
-					Math.abs(position[0] - target[0]) + Math.abs(position[1] - target[1]);
+				const distanceX = Math.abs(position[0] - target[0]);
+				const distanceY = Math.abs(position[1] - target[1]);
+				const distance = distanceX + distanceY;
+
 				return {
 					connection,
 					position,
+					distanceX,
+					distanceY,
 					distance,
 				};
 			});
@@ -169,7 +173,29 @@ const useFocusStore = create<IFocusState>((set, get) => ({
 				console.error("Component doesn't have any focusable children");
 				return false;
 			}
-			connectionPositions.sort((a, b) => a.distance - b.distance);
+
+			// if vertical movement, find component that's nearest vertically
+			if (action == MovementAction.UP || action == MovementAction.DOWN) {
+				connectionPositions.sort((a, b) => a.distanceY - b.distanceY);
+				const shortestDistance = connectionPositions[0].distanceY;
+				connectionPositions = connectionPositions.filter(
+					(connection) => connection.distanceY <= shortestDistance,
+				);
+			}
+			// if horizontal movement, find component that's nearest horizontally
+			if (action == MovementAction.LEFT || action == MovementAction.RIGHT) {
+				connectionPositions.sort((a, b) => a.distanceX - b.distanceX);
+				const shortestDistance = connectionPositions[0].distanceX;
+				connectionPositions = connectionPositions.filter(
+					(connection) => connection.distanceX <= shortestDistance,
+				);
+			}
+
+			// if multiple components are equally near (or movement wasn't horizontal/vertical), select the nearest one
+			if (connectionPositions.length > 1) {
+				connectionPositions.sort((a, b) => a.distance - b.distance);
+			}
+
 			console.log({ connectionPositions });
 
 			set((oldState) => ({
