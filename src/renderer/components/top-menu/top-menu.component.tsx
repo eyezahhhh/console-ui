@@ -52,7 +52,7 @@ export function TopMenu(props: Props) {
 						onEnter={() => navigate("/")}
 					/>
 				)}
-				{(!!availableUpdate || true) &&
+				{!!availableUpdate &&
 					((props) => (
 						<TopMenuButton
 							{...props}
