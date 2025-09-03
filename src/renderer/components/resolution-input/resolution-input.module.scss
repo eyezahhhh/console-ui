@@ -1,0 +1,14 @@
+.container {
+	display: flex;
+	gap: 15px;
+
+	.input {
+		width: 200px;
+		position: relative;
+
+		&::before {
+			content: "Width";
+			position: absolute;
+		}
+	}
+}
