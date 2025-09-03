@@ -18,7 +18,7 @@ export function MachineList({ setUnfocused, parentKey, index }: Props) {
 			index={index}
 		>
 			{machines.map((machine) => (props) => (
-				<Machine {...props} machine={machine} key={machine.address} />
+				<Machine {...props} machine={machine} key={machine.config.address} />
 			))}
 		</NavList>
 	);
