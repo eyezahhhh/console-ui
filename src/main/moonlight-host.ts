@@ -1,5 +1,5 @@
 import { XMLParser } from "fast-xml-parser";
-import Axios, { AxiosInstance, AxiosResponse, CanceledError } from "axios";
+import Axios, { AxiosInstance, CanceledError } from "axios";
 import { StandaloneLogger } from "./logger";
 import { MoonlightEmbeddedController } from "./moonlight-embedded-controller";
 import crypto from "crypto";
@@ -13,15 +13,15 @@ import IMoonlightHostStatus from "@interface/moonlight-host-status.interface";
 import IMoonlightHostDiskInfo from "@interface/moonlight-host-disk-info.interface";
 import ISunshineServerInfo from "@interface/sunshine-server-info.interface";
 import IMachine from "@interface/machine.interface";
-import IMoonlightServerCertificate from "@interface/moonlight-server-certificate.interface";
-import IMoonlightClientChallengeResponse from "@interface/moonlight-client-challenge-response.interface";
-import IMoonlightServerChallengeResponse from "@interface/moonlight-server-challenge-response.interface";
-import IMoonlightClientPairingCheck from "@interface/moonlight-client-pairing-check.interface";
+import IMoonlightPairServerCertificate from "@interface/moonlight-pair-server-certificate.interface";
+import IMoonlightPairClientChallengeResponse from "@interface/moonlight-pair-client-challenge-response.interface";
+import IMoonlightPairServerChallengeResponse from "@interface/moonlight-pair-server-challenge-response.interface";
+import IMoonlightPairClientPairingCheck from "@interface/moonlight-pair-client-pairing-check.interface";
 import { AgentOptions } from "https";
 import { IpcMain } from "./ipc";
 import { Emitter } from "@util/emitter.util";
-import ISunshineAppList from "@interface/sunshine-app-list.interface";
-import ISunshineApp from "@interface/sunshine-app.interface";
+import ISunshineAppList from "@interface/moonlight-app-list.interface";
+import ISunshineApp from "@interface/moonlight-app.interface";
 import { assertMachineDiscovered } from "@util/object.util";
 
 type Events = {
@@ -77,8 +77,6 @@ export default class MoonlightHost extends Emitter<Events> {
 			.finally(() => this.fetchServerInfo())
 			.catch((e) => this.logger.error("Error while fetching server info:", e));
 
-		// this.fetchServerInfo().catch((error) => this.logger.error(error));
-
 		ipc.addEventListener("pair", (uuid) => {
 			if (!uuid || uuid != this.uuid) {
 				return;
@@ -108,7 +106,7 @@ export default class MoonlightHost extends Emitter<Events> {
 				return;
 			}
 
-			const app = this.status.apps.find((app) => app.ID == appId);
+			const app = this.status.apps.find((app) => app.id == appId);
 			if (!app) {
 				this.logger.log(
 					`Received request to stream app "${appId}" but it doesn't exist.`,
@@ -116,7 +114,7 @@ export default class MoonlightHost extends Emitter<Events> {
 				return;
 			}
 
-			this.logger.log(`Starting to stream app "${app.AppTitle}"`);
+			this.logger.log(`Starting to stream app "${app.name}"`);
 			this.controller.startStream(this, app).then(() => {
 				this.logger.log("Stream has finished");
 			});
@@ -225,7 +223,11 @@ export default class MoonlightHost extends Emitter<Events> {
 					online: true,
 					codecs,
 					isPaired: true,
-					apps,
+					apps: apps.map((app) => ({
+						id: app.ID,
+						name: app.AppTitle,
+						supportsHdr: !!app.IsHdrSupported,
+					})),
 					isPairing: false,
 				});
 			} else {
@@ -312,7 +314,7 @@ export default class MoonlightHost extends Emitter<Events> {
 		}
 	}
 
-	getStatus(): IMachine {
+	getMachine(): IMachine {
 		return structuredClone({
 			...this.status,
 			config: this.data,
@@ -353,7 +355,7 @@ export default class MoonlightHost extends Emitter<Events> {
 			return;
 		}
 		this.status = status;
-		this.emit("status", this.getStatus());
+		this.emit("status", this.getMachine());
 	}
 
 	private async updateDiskInfo(
@@ -374,7 +376,7 @@ export default class MoonlightHost extends Emitter<Events> {
 			return;
 		}
 		this.data = newData;
-		this.emit("status", this.getStatus());
+		this.emit("status", this.getMachine());
 
 		if (!newData.discovered || !forceOverwrite) {
 			const storageFile = this.getStorageFile();
@@ -440,7 +442,7 @@ export default class MoonlightHost extends Emitter<Events> {
 			const salt = crypto.randomBytes(16);
 			const saltPin = Buffer.concat([salt, Buffer.from(pin, "ascii")]);
 
-			const machine = this.getStatus();
+			const machine = this.getMachine();
 			assertMachineDiscovered(machine);
 			this.ipc.send("pairing_code", pin, machine);
 
@@ -461,7 +463,7 @@ export default class MoonlightHost extends Emitter<Events> {
 				ignoreAttributes: false,
 			});
 			const { root: xml1 } = parser.parse(response1.data) as {
-				root: IMoonlightServerCertificate;
+				root: IMoonlightPairServerCertificate;
 			};
 
 			if (!xml1.paired) {
@@ -506,7 +508,7 @@ export default class MoonlightHost extends Emitter<Events> {
 			});
 
 			const { root: xml2 } = parser.parse(response2.data) as {
-				root: IMoonlightClientChallengeResponse;
+				root: IMoonlightPairClientChallengeResponse;
 			};
 
 			if (!xml2.paired) {
@@ -564,7 +566,7 @@ export default class MoonlightHost extends Emitter<Events> {
 			});
 
 			const { root: xml3 } = parser.parse(response3.data) as {
-				root: IMoonlightServerChallengeResponse;
+				root: IMoonlightPairServerChallengeResponse;
 			};
 
 			if (!xml3.paired) {
@@ -627,7 +629,7 @@ export default class MoonlightHost extends Emitter<Events> {
 			}
 
 			const { root: xml5 } = parser.parse(response5.data) as {
-				root: IMoonlightClientPairingCheck;
+				root: IMoonlightPairClientPairingCheck;
 			};
 
 			if (!xml5.paired) {
