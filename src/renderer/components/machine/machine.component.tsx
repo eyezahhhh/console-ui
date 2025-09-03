@@ -4,6 +4,7 @@ import IMachine from "@interface/machine.interface";
 import IFocusableProps from "@interface/focusable-props.interface";
 import { useNavigate } from "react-router";
 import Clickable from "@component/clickable";
+import { isMachineOnline } from "@util/object.util";
 
 interface Props extends IFocusableProps {
 	machine?: IMachine;
@@ -11,8 +12,16 @@ interface Props extends IFocusableProps {
 
 export function Machine({ machine, parentKey, setUnfocused, index }: Props) {
 	const navigate = useNavigate();
+
+	const uuid = useMemo(() => {
+		return (machine?.config.discovered && machine.config.uuid) || null;
+	}, [machine]);
+
 	const name = useMemo(() => {
-		return machine?.name || machine?.address || "Unknown Machine";
+		if (machine?.config.discovered) {
+			return machine.config.name;
+		}
+		return machine?.config.address || "Unknown Machine";
 	}, [machine]);
 
 	return (
@@ -22,7 +31,9 @@ export function Machine({ machine, parentKey, setUnfocused, index }: Props) {
 			index={index}
 			className={styles.container}
 			focusedClassName={styles.focused}
-			onEnter={machine && (() => navigate(`/machine/${machine.uuid}`))}
+			onEnter={
+				isMachineOnline(machine || null) && (() => navigate(`/machine/${uuid}`))
+			}
 		>
 			<div className={styles.content}>
 				<span className={styles.title}>{name}</span>

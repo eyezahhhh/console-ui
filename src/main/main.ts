@@ -28,6 +28,10 @@ Promise.all([app.whenReady(), settings.read()]).then(() => {
 			get_machines: async () => {
 				return getMoonlight().getMachines();
 			},
+			get_app_image: (machine, appId) => {
+				// const host = getMoonlight().getHosts().find((host) => host)
+				return null;
+			},
 			get_settings: () => settings.get(),
 			save_settings: (newSettings) => settings.validateAndSet(newSettings),
 			create_machine: (address) => {
