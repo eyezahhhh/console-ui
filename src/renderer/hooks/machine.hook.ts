@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from "react";
 import useMachines from "./machines.hook";
-import IMachine from "@interface/machine.interface";
+import IDiscoveredMachine from "@interface/discovered-machine.interface";
+import { isMachineDiscovered } from "@util/object.util";
 
 interface Options {
 	onPin: (pin: string) => void;
@@ -12,16 +13,20 @@ export default function useMachine(
 ) {
 	const machines = useMachines();
 	const machine = useMemo(() => {
-		return machines.find((machine) => machine.uuid == uuid) || null;
+		return (
+			machines.find(
+				(machine) => machine.config.discovered && machine.config.uuid == uuid,
+			) || null
+		);
 	}, [machines, uuid]);
 
 	useEffect(() => {
-		if (!machine) {
+		if (!isMachineDiscovered(machine)) {
 			return;
 		}
 
-		const pinListener = (pin: string, pinMachine: IMachine) => {
-			if (pinMachine.uuid == machine.uuid) {
+		const pinListener = (pin: string, pinMachine: IDiscoveredMachine) => {
+			if (pinMachine.config.uuid == machine.config.uuid) {
 				onPin?.(pin);
 			}
 		};

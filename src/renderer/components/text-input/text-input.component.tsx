@@ -13,6 +13,7 @@ interface Props extends IFocusableProps {
 	onChange?: (value: string) => void;
 	keymap?: OnScreenKeyboardKeymap;
 	placeholder?: string;
+	className?: string;
 }
 
 export function TextInput({
@@ -23,6 +24,7 @@ export function TextInput({
 	onChange,
 	keymap,
 	placeholder,
+	className,
 }: Props) {
 	const [keyboardVisible, setKeyboardVisible] = useState(false);
 	const { isFocusedChildOf, setFocused } = useFocusStore();
@@ -88,7 +90,7 @@ export function TextInput({
 	}, [element, selection, value]);
 
 	return (
-		<span>
+		<>
 			<input
 				placeholder={placeholder}
 				ref={ref}
@@ -100,7 +102,11 @@ export function TextInput({
 						e.currentTarget.selectionEnd ?? e.currentTarget.selectionStart ?? 0,
 					]);
 				}}
-				className={cc(styles.input, isIndirectlyFocused && styles.focused)}
+				className={cc(
+					styles.input,
+					isIndirectlyFocused && styles.focused,
+					className,
+				)}
 				onClick={() => move(MovementAction.ENTER)}
 				onSelect={(e) =>
 					setSelection([
@@ -134,6 +140,6 @@ export function TextInput({
 					}}
 				/>
 			)}
-		</span>
+		</>
 	);
 }

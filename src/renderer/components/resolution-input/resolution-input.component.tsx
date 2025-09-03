@@ -1,6 +1,8 @@
 import NavList from "@component/nav-list";
 import TextInput from "@component/text-input";
 import IFocusableProps from "@interface/focusable-props.interface";
+import styles from "./resolution-input.module.scss";
+import { cc } from "@util/string.util";
 
 interface Props extends IFocusableProps {
 	resolution: [number, number];
@@ -38,6 +40,7 @@ export function ResolutionInput({
 			parentKey={parentKey}
 			index={index}
 			setUnfocused={setUnfocused}
+			className={styles.container}
 		>
 			{(props) => (
 				<TextInput
@@ -45,6 +48,8 @@ export function ResolutionInput({
 					value={resolution[0]}
 					onChange={(e) => change(e, 0)}
 					keymap="whole_number"
+					className={cc(styles.input, styles.width)}
+					placeholder="Width"
 				/>
 			)}
 			{(props) => (
@@ -53,6 +58,8 @@ export function ResolutionInput({
 					value={resolution[1]}
 					onChange={(e) => change(e, 1)}
 					keymap="whole_number"
+					className={cc(styles.input, styles.height)}
+					placeholder="Height"
 				/>
 			)}
 		</NavList>

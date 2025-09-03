@@ -1,5 +1,5 @@
 import { XMLParser } from "fast-xml-parser";
-import Axios, { AxiosInstance, AxiosResponse, CanceledError } from "axios";
+import Axios, { AxiosInstance, CanceledError } from "axios";
 import { StandaloneLogger } from "./logger";
 import { MoonlightEmbeddedController } from "./moonlight-embedded-controller";
 import crypto from "crypto";
@@ -13,37 +13,33 @@ import IMoonlightHostStatus from "@interface/moonlight-host-status.interface";
 import IMoonlightHostDiskInfo from "@interface/moonlight-host-disk-info.interface";
 import ISunshineServerInfo from "@interface/sunshine-server-info.interface";
 import IMachine from "@interface/machine.interface";
-import IMoonlightServerCertificate from "@interface/moonlight-server-certificate.interface";
-import IMoonlightClientChallengeResponse from "@interface/moonlight-client-challenge-response.interface";
-import IMoonlightServerChallengeResponse from "@interface/moonlight-server-challenge-response.interface";
-import IMoonlightClientPairingCheck from "@interface/moonlight-client-pairing-check.interface";
+import IMoonlightPairServerCertificate from "@interface/moonlight-pair-server-certificate.interface";
+import IMoonlightPairClientChallengeResponse from "@interface/moonlight-pair-client-challenge-response.interface";
+import IMoonlightPairServerChallengeResponse from "@interface/moonlight-pair-server-challenge-response.interface";
+import IMoonlightPairClientPairingCheck from "@interface/moonlight-pair-client-pairing-check.interface";
 import { AgentOptions } from "https";
-import MachineState from "@enum/machine-state.enum";
 import { IpcMain } from "./ipc";
 import { Emitter } from "@util/emitter.util";
-import ISunshineApp from "@interface/sunshine-app.interface";
-import ISunshineAppList from "@interface/sunshine-app-list.interface";
+import ISunshineAppList from "@interface/moonlight-app-list.interface";
+import ISunshineApp from "@interface/moonlight-app.interface";
+import { assertMachineDiscovered } from "@util/object.util";
 
 type Events = {
 	status: [IMoonlightHostStatus];
-	apps: [ISunshineApp[]];
 };
+
 export default class MoonlightHost extends Emitter<Events> {
 	private readonly axios: AxiosInstance;
-	private readonly port: number;
-	private isHttpsSupported = false;
 	private uuid: string | null = null;
-	private name: string | null = null;
-	private codecs: SunshineCodec[] = [];
 	private httpsPort: number | null = null;
-	private type: "sunshine" | "gamestream" | null = null;
-	private version: string | null = null;
-	// private updateListeners = new Set<(status: IMoonlightHostStatus) => void>();
 	private infoFetchAbort: AbortController | null = null;
 	private logger: StandaloneLogger;
-	private diskData: IMoonlightHostDiskInfo | null = null;
 	private pairAbort: AbortController | null = null;
-	private apps: ISunshineApp[] = [];
+
+	private data: IMoonlightHostDiskInfo;
+	private status: IMoonlightHostStatus = {
+		online: false,
+	};
 
 	static async fromUuid(uuid: string, controller: MoonlightEmbeddedController) {
 		const filePath = path.join(this.getStorageDir(), `${uuid}.json`);
@@ -56,31 +52,37 @@ export default class MoonlightHost extends Emitter<Events> {
 	}
 
 	constructor(
-		private readonly address: string,
+		address: string,
 		port: number | null,
 		private readonly controller: MoonlightEmbeddedController,
 		private readonly ipc: IpcMain,
 	) {
 		super();
-		this.port = port || 47989;
+		this.data = {
+			address,
+			port: port || 47989,
+			discovered: false,
+		};
+
 		this.axios = Axios.create({
-			baseURL: `http://${address}:${this.port}`,
+			baseURL: `http://${this.getAddress()}`,
 		});
-		this.logger = new StandaloneLogger(`Moonlight ${address}:${this.port}`);
+		this.logger = new StandaloneLogger(`Moonlight ${this.getAddress()}`);
 		this.logger.log(`Created new Moonlight host`);
 
-		this.fetchServerInfo().catch((error) => this.logger.error(error));
-
-		this.addEventListener("apps", () => {
-			this.emit("status", this.getStatus());
-		});
+		this.restoreInfo()
+			.catch(() => {
+				this.logger.log("Couldn't restore info from disk, host must be new.");
+			})
+			.finally(() => this.fetchServerInfo())
+			.catch((e) => this.logger.error("Error while fetching server info:", e));
 
 		ipc.addEventListener("pair", (uuid) => {
 			if (!uuid || uuid != this.uuid) {
 				return;
 			}
 
-			if (this.isHttpsSupported) {
+			if (this.status.online && this.status.isPaired) {
 				this.logger.log(
 					"Received pairing request but host is already paired, ignoring.",
 				);
@@ -97,7 +99,14 @@ export default class MoonlightHost extends Emitter<Events> {
 				return;
 			}
 
-			const app = this.apps.find((app) => app.ID == appId);
+			if (!this.status.online || !this.status.isPaired) {
+				this.logger.log(
+					"Received request for app list but host isn't paired or online.",
+				);
+				return;
+			}
+
+			const app = this.status.apps.find((app) => app.id == appId);
 			if (!app) {
 				this.logger.log(
 					`Received request to stream app "${appId}" but it doesn't exist.`,
@@ -105,7 +114,7 @@ export default class MoonlightHost extends Emitter<Events> {
 				return;
 			}
 
-			this.logger.log(`Starting to stream app "${app.AppTitle}"`);
+			this.logger.log(`Starting to stream app "${app.name}"`);
 			this.controller.startStream(this, app).then(() => {
 				this.logger.log("Stream has finished");
 			});
@@ -123,8 +132,6 @@ export default class MoonlightHost extends Emitter<Events> {
 			if (this.infoFetchAbort) {
 				this.infoFetchAbort.abort();
 			}
-
-			const oldStatus = this.getStatus();
 
 			const response = await createAxios().then((axios) =>
 				axios.get("serverinfo", {
@@ -167,18 +174,25 @@ export default class MoonlightHost extends Emitter<Events> {
 
 			const isNewUuid = this.uuid != xml.uniqueid;
 			this.uuid = xml.uniqueid;
-			this.codecs = codecs;
-			this.name = xml.hostname;
 			this.httpsPort = xml.HttpsPort;
-			this.version = xml.appversion;
-			this.type = xml.mac == "00:00:00:00:00:00" ? "sunshine" : "gamestream"; // sunshine doesn't pass real mac address
 
 			if (isNewUuid) {
+				this.logger.log("UUID was updated.");
 				try {
 					await this.restoreInfo();
-					this.logger.log("Loaded data from disk");
 				} catch {}
 			}
+
+			this.updateDiskInfo((old) => ({
+				address: old.address,
+				port: old.port,
+				discovered: true,
+				uuid: xml.uniqueid,
+				name: xml.hostname,
+				type: xml.mac == "00:00:00:00:00:00" ? "sunshine" : "gamestream", // sunshine doesn't pass real mac address
+				serverCert: old.discovered ? old.serverCert : null,
+				appVersion: xml.appversion,
+			}));
 
 			if (secure) {
 				const uniqueId = await this.controller.getUniqueId();
@@ -194,74 +208,96 @@ export default class MoonlightHost extends Emitter<Events> {
 				const { root: xml } = parser.parse(response.data) as {
 					root: ISunshineAppList;
 				};
-				if (Array.isArray(xml.App)) {
-					this.apps = xml.App;
-				} else {
-					this.apps = [xml.App];
-				}
-				this.emit("apps", this.apps);
 
 				if (xml["@_status_code"] != "200") {
 					throw new Error("HTTPS is unauthorized");
 				}
-			}
 
-			if (JSON.stringify(oldStatus) != JSON.stringify(this.getStatus())) {
-				this.emit("status", this.getStatus());
+				const apps: ISunshineApp[] = [];
+				if (Array.isArray(xml.App)) {
+					apps.push(...xml.App);
+				} else {
+					apps.push(xml.App);
+				}
+				this.updateStatus({
+					online: true,
+					codecs,
+					isPaired: true,
+					apps: apps.map((app) => ({
+						id: app.ID,
+						name: app.AppTitle,
+						supportsHdr: !!app.IsHdrSupported,
+					})),
+					isPairing: false,
+				});
+			} else {
+				this.updateStatus({
+					online: true,
+					codecs,
+					isPaired: false,
+					isPairing: this.status.online && this.status.isPairing,
+				});
 			}
 		};
 
-		if (this.isHttpsSupported) {
-			try {
-				this.logger.log(
-					"Checking if host continues to support secure connections.",
-				);
-				await fetch(() => this.createSecureAxios(), true);
-				this.logger.log(
-					"Secure connections are still supported, host is still paired.",
-				);
-			} catch (e) {
-				if (e instanceof CanceledError) {
-					return;
-				}
-				this.logger.log(
-					e,
-					"Insecure connections are no longer supported, host is unpaired or offline.",
-				);
-				this.isHttpsSupported = false;
-				this.emit("status", this.getStatus());
-			}
-		} else {
-			try {
-				this.logger.log("Establishing insecure connection.");
-				await fetch(() => this.axios, false);
-				this.logger.log(
-					"Insecure connection established, attempting secure connection.",
-				);
-
+		if (!this.status.online || !this.status.isPairing) {
+			if (this.status.online && this.status.isPaired) {
 				try {
+					this.logger.log(
+						"Checking if host continues to support secure connections.",
+					);
 					await fetch(() => this.createSecureAxios(), true);
-					this.isHttpsSupported = true;
-					this.logger.log("Secure connection established, host is paired.");
-					this.emit("status", this.getStatus());
+					this.logger.log(
+						"Secure connections are still supported, host is still paired.",
+					);
 				} catch (e) {
 					if (e instanceof CanceledError) {
 						return;
 					}
 					this.logger.log(
-						"Failed to establish secure connection, host isn't paired.",
+						e,
+						"Insecure connections are no longer supported, host is unpaired or offline.",
+					);
+					if (this.status.online) {
+						this.updateStatus({
+							online: true,
+							codecs: this.status.codecs,
+							isPaired: false,
+							isPairing: this.status.online && this.status.isPairing,
+						});
+					}
+				}
+			} else {
+				try {
+					this.logger.log("Establishing insecure connection.");
+					await fetch(() => this.axios, false);
+					this.logger.log(
+						"Insecure connection established, attempting secure connection.",
+					);
+
+					try {
+						await fetch(() => this.createSecureAxios(), true);
+						this.logger.log("Secure connection established, host is paired.");
+					} catch (e) {
+						if (e instanceof CanceledError) {
+							return;
+						}
+						this.logger.log(
+							"Failed to establish secure connection, host isn't paired.",
+						);
+					}
+				} catch (e) {
+					if (e instanceof CanceledError) {
+						return;
+					}
+					this.updateStatus({
+						online: false,
+					});
+
+					this.logger.log(
+						"Couldn't establish insecure connection, host is offline or inaccessable.",
 					);
 				}
-			} catch (e) {
-				if (e instanceof CanceledError) {
-					return;
-				}
-				this.isHttpsSupported = false; // connection failed, use insecure next time we attempt to connect
-				this.name = null; // missing name means host is offline
-				this.emit("status", this.getStatus());
-				this.logger.log(
-					"Couldn't establish insecure connection, host is offline or inaccessable.",
-				);
 			}
 		}
 
@@ -278,55 +314,15 @@ export default class MoonlightHost extends Emitter<Events> {
 		}
 	}
 
-	getStatus(): IMoonlightHostStatus {
-		if (this.uuid && this.name && this.httpsPort && this.type && this.version) {
-			return {
-				enabled: true,
-				address: this.address,
-				port: this.port,
-				uuid: this.uuid,
-				name: this.name,
-				codecs: this.codecs,
-				httpsPort: this.httpsPort,
-				type: this.type,
-				version: this.version,
-			};
-		}
-		return {
-			enabled: false,
-			address: this.address,
-			port: this.port,
-		};
-	}
-
-	asMachine(): IMachine | null {
-		if (!this.uuid) {
-			return null;
-		}
-
-		let state = MachineState.UNPAIRED;
-		if (this.pairAbort) {
-			state = MachineState.PAIRING;
-		}
-		if (this.isHttpsSupported) {
-			state = MachineState.PAIRED;
-		}
-
-		return {
-			uuid: this.uuid,
-			address: this.address,
-			name: this.name || undefined,
-			state,
-			type: this.type || undefined,
-			apps: this.apps,
-		};
+	getMachine(): IMachine {
+		return structuredClone({
+			...this.status,
+			config: this.data,
+		});
 	}
 
 	getAddress() {
-		return {
-			address: this.address,
-			port: this.port,
-		};
+		return `${this.data.address}:${this.data.port}`;
 	}
 
 	private randomPin() {
@@ -349,24 +345,56 @@ export default class MoonlightHost extends Emitter<Events> {
 		return path.join(MoonlightHost.getStorageDir(), `${this.uuid}.json`);
 	}
 
-	private async saveInfo(data: IMoonlightHostDiskInfo) {
-		const storageFile = this.getStorageFile();
-		this.logger.log(`Saving info to disk... (${storageFile})`);
-		this.diskData = data;
+	private updateStatus(status: IMoonlightHostStatus) {
+		const oldSerialized = JSON.stringify(this.status);
+		const newSerialized = JSON.stringify(status);
+		if (oldSerialized == newSerialized) {
+			this.logger.log(
+				"Requested to update status but with no changes. Ignoring.",
+			);
+			return;
+		}
+		this.status = status;
+		this.emit("status", this.getMachine());
+	}
 
-		await promisify(mkdir)(MoonlightHost.getStorageDir(), {
-			recursive: true,
-		});
-		await promisify(writeFile)(storageFile, JSON.stringify(data, null, 2));
+	private async updateDiskInfo(
+		dataCallback: (oldInfo: IMoonlightHostDiskInfo) => IMoonlightHostDiskInfo,
+		forceOverwrite?: boolean,
+	) {
+		const oldSerialized = JSON.stringify(this.data);
+		const newData = {
+			...dataCallback(this.data),
+			address: this.data.address, // manually pass address and port AFTER callback so they can't be overridden
+			port: this.data.port,
+		} as IMoonlightHostDiskInfo;
+		const newSerialized = JSON.stringify(newData);
+		if (oldSerialized == newSerialized) {
+			this.logger.log(
+				"Requested to update disk info but with no changes. Ignoring.",
+			);
+			return;
+		}
+		this.data = newData;
+		this.emit("status", this.getMachine());
+
+		if (!newData.discovered || !forceOverwrite) {
+			const storageFile = this.getStorageFile();
+			this.logger.log(`Saving info to disk... (${storageFile})`);
+			await promisify(mkdir)(MoonlightHost.getStorageDir(), {
+				recursive: true,
+			});
+			await promisify(writeFile)(storageFile, JSON.stringify(newData, null, 2));
+		}
 	}
 
 	private async restoreInfo() {
 		const storageFile = this.getStorageFile();
-		this.logger.log("Reading info from disk...");
+		this.logger.log(`Reading info from disk... (${storageFile})`);
 		const data = await promisify(readFile)(storageFile);
 		const json = JSON.parse(data.toString("utf-8")) as IMoonlightHostDiskInfo;
 		this.logger.log("Successfully read info from disk:", json);
-		this.diskData = json;
+		this.data = json;
 	}
 
 	async pair() {
@@ -375,22 +403,37 @@ export default class MoonlightHost extends Emitter<Events> {
 		}
 		const controller = new AbortController();
 		try {
+			if (!this.status.online) {
+				throw new Error("Host isn't online");
+			}
+
 			if (this.pairAbort) {
 				this.pairAbort.abort();
 				this.pairAbort = null;
-				this.emit("status", this.getStatus());
+				if (this.status.online) {
+					this.updateStatus({
+						...this.status,
+						isPairing: false,
+					});
+				}
 			}
-			if (!this.version) {
+			if (!this.data.discovered || !this.data.appVersion) {
 				throw new Error("Server version unknown");
 			}
-			const isV7 = parseInt(this.version.split(".")[0]) >= 7;
+			const isV7 = parseInt(this.data.appVersion.split(".")[0]) >= 7;
 
 			this.logger.log(
-				`Beginning pair request to ${isV7 ? "V7+" : "Old"} server (${this.version}).`,
+				`Beginning pair request to ${isV7 ? "V7+" : "Old"} server (${this.data.appVersion}).`,
 			);
 
 			this.pairAbort = controller;
-			this.emit("status", this.getStatus());
+			if (!this.status.online) {
+				throw new Error("Host isn't online");
+			}
+			this.updateStatus({
+				...this.status,
+				isPairing: true,
+			});
 
 			const publicKey = await this.controller.getPublicKey();
 			const uniqueId = await this.controller.getUniqueId();
@@ -399,7 +442,9 @@ export default class MoonlightHost extends Emitter<Events> {
 			const salt = crypto.randomBytes(16);
 			const saltPin = Buffer.concat([salt, Buffer.from(pin, "ascii")]);
 
-			this.ipc.send("pairing_code", pin, this.asMachine()!);
+			const machine = this.getMachine();
+			assertMachineDiscovered(machine);
+			this.ipc.send("pairing_code", pin, machine);
 
 			const response1 = await this.axios.get(`pair`, {
 				signal: controller.signal,
@@ -418,7 +463,7 @@ export default class MoonlightHost extends Emitter<Events> {
 				ignoreAttributes: false,
 			});
 			const { root: xml1 } = parser.parse(response1.data) as {
-				root: IMoonlightServerCertificate;
+				root: IMoonlightPairServerCertificate;
 			};
 
 			if (!xml1.paired) {
@@ -463,7 +508,7 @@ export default class MoonlightHost extends Emitter<Events> {
 			});
 
 			const { root: xml2 } = parser.parse(response2.data) as {
-				root: IMoonlightClientChallengeResponse;
+				root: IMoonlightPairClientChallengeResponse;
 			};
 
 			if (!xml2.paired) {
@@ -521,7 +566,7 @@ export default class MoonlightHost extends Emitter<Events> {
 			});
 
 			const { root: xml3 } = parser.parse(response3.data) as {
-				root: IMoonlightServerChallengeResponse;
+				root: IMoonlightPairServerChallengeResponse;
 			};
 
 			if (!xml3.paired) {
@@ -548,6 +593,7 @@ export default class MoonlightHost extends Emitter<Events> {
 				clientSecret,
 				clientSignature,
 			]);
+
 			await this.axios.get("pair", {
 				signal: controller.signal,
 				params: {
@@ -583,7 +629,7 @@ export default class MoonlightHost extends Emitter<Events> {
 			}
 
 			const { root: xml5 } = parser.parse(response5.data) as {
-				root: IMoonlightClientPairingCheck;
+				root: IMoonlightPairClientPairingCheck;
 			};
 
 			if (!xml5.paired) {
@@ -591,21 +637,39 @@ export default class MoonlightHost extends Emitter<Events> {
 			}
 
 			this.logger.log("Paired successfully");
-			this.isHttpsSupported = true;
 
-			await this.saveInfo({
-				serverCert: serverCert.toString("base64"),
-				address: this.address,
-				port: this.port,
+			await this.updateDiskInfo((old) => {
+				if (!old.discovered) {
+					return old;
+				}
+				return {
+					address: old.address,
+					port: old.port,
+					discovered: true,
+					name: old.name,
+					uuid: old.uuid,
+					type: old.type,
+					serverCert: serverCert.toString("base64"),
+					appVersion: old.appVersion,
+				};
 			});
 
 			if (this.pairAbort == controller) {
 				this.pairAbort = null;
+				this.updateStatus({
+					...this.status,
+					isPairing: false,
+				});
 			}
 		} catch (e) {
 			if (this.pairAbort == controller) {
 				this.pairAbort = null;
-				this.emit("status", this.getStatus());
+				if (this.status.online) {
+					this.updateStatus({
+						...this.status,
+						isPairing: false,
+					});
+				}
 			}
 			if (e instanceof CanceledError) {
 				return;
@@ -626,17 +690,13 @@ export default class MoonlightHost extends Emitter<Events> {
 		if (httpsOptions?.ca) {
 			serverCert = httpsOptions.ca;
 		} else {
-			if (!this.diskData) {
-				try {
-					await this.restoreInfo();
-				} catch (e) {
-					throw new Error(
-						"Cannot create secure Axios instance because server certificate is not available.",
-					);
-				}
+			if (!this.data.discovered || !this.data.serverCert) {
+				throw new Error(
+					"Couldn't create secure connection because host isn't paired.",
+				);
 			}
 
-			serverCert = Buffer.from(this.diskData!.serverCert, "base64");
+			serverCert = Buffer.from(this.data.serverCert, "base64");
 		}
 
 		if (!this.httpsPort) {
@@ -652,13 +712,9 @@ export default class MoonlightHost extends Emitter<Events> {
 		});
 
 		return Axios.create({
-			baseURL: `https://${this.address}:${this.httpsPort}`,
+			baseURL: `https://${this.data.address}:${this.httpsPort}`,
 			httpsAgent,
 		});
-	}
-
-	public isPaired() {
-		return this.isHttpsSupported;
 	}
 
 	async unpair() {
@@ -673,5 +729,21 @@ export default class MoonlightHost extends Emitter<Events> {
 		});
 
 		console.log(response.status, response.data);
+	}
+
+	async getAppImage(appId: number) {
+		try {
+			const axios = await this.createSecureAxios();
+			const response = await axios.get("boxart", {
+				params: new URLSearchParams({
+					appid: appId.toString(),
+				}),
+			});
+			console.log(response.data, response.status);
+			return "hello";
+		} catch (e) {
+			this.logger.error("Failed to get box art", e);
+			return null;
+		}
 	}
 }
