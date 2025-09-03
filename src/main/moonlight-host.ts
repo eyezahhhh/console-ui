@@ -23,6 +23,7 @@ import { Emitter } from "@util/emitter.util";
 import ISunshineAppList from "@interface/moonlight-app-list.interface";
 import ISunshineApp from "@interface/moonlight-app.interface";
 import { assertMachineDiscovered } from "@util/object.util";
+import { createHash } from "crypto";
 
 type Events = {
 	status: [IMoonlightHostStatus];
@@ -65,9 +66,11 @@ export default class MoonlightHost extends Emitter<Events> {
 		};
 
 		this.axios = Axios.create({
-			baseURL: `http://${this.getAddress()}`,
+			baseURL: `http://${this.getAddress()}:${this.data.port}`,
 		});
-		this.logger = new StandaloneLogger(`Moonlight ${this.getAddress()}`);
+		this.logger = new StandaloneLogger(
+			`Moonlight ${this.getAddress()}:${this.data.port}`,
+		);
 		this.logger.log(`Created new Moonlight host`);
 
 		this.restoreInfo()
@@ -322,7 +325,7 @@ export default class MoonlightHost extends Emitter<Events> {
 	}
 
 	getAddress() {
-		return `${this.data.address}:${this.data.port}`;
+		return this.data.address;
 	}
 
 	private randomPin() {
@@ -393,7 +396,7 @@ export default class MoonlightHost extends Emitter<Events> {
 		this.logger.log(`Reading info from disk... (${storageFile})`);
 		const data = await promisify(readFile)(storageFile);
 		const json = JSON.parse(data.toString("utf-8")) as IMoonlightHostDiskInfo;
-		this.logger.log("Successfully read info from disk:", json);
+		this.logger.log("Successfully read info from disk.");
 		this.data = json;
 	}
 
@@ -731,16 +734,24 @@ export default class MoonlightHost extends Emitter<Events> {
 		console.log(response.status, response.data);
 	}
 
-	async getAppImage(appId: number) {
+	async getAppImage(appId: number): Promise<null | [string, boolean]> {
 		try {
 			const axios = await this.createSecureAxios();
-			const response = await axios.get("boxart", {
+			const response = await axios.get<Buffer>("appasset", {
 				params: new URLSearchParams({
 					appid: appId.toString(),
+					AssetType: "2",
+					AssetIdx: "2",
 				}),
+				responseType: "arraybuffer",
 			});
-			console.log(response.data, response.status);
-			return "hello";
+			if (response.status != 200) {
+				throw new Error(`Status code ${response.status}`);
+			}
+			const image = `data:image/png;base64,${response.data.toString("base64")}`;
+			const hash = createHash("sha1").update(response.data).digest("hex");
+			const isDefault = hash == "33513094e568b477f03c698964611b5be20204b2";
+			return [image, isDefault];
 		} catch (e) {
 			this.logger.error("Failed to get box art", e);
 			return null;

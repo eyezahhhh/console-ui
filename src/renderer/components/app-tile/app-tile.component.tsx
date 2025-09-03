@@ -1,9 +1,10 @@
 import IFocusableProps from "@interface/focusable-props.interface";
 import styles from "./app-tile.module.scss";
 import Clickable from "@component/clickable";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import IDiscoveredMachine from "@interface/discovered-machine.interface";
 import IMachineApp from "@interface/machine-app.interface";
+import Ghost from "@/ghost";
 
 interface Props extends IFocusableProps {
 	app: IMachineApp;
@@ -20,12 +21,18 @@ export function AppTile({
 	machine,
 }: Props) {
 	console.log({ app });
+	const [image, setImage] = useState<string | null>(null);
+	const [isDefaultImage, setIsDefaultImage] = useState(true);
 
 	useEffect(() => {
-		console.log("App ID:", app.id);
 		let active = true;
+		setImage(null);
 		window.ipc.invoke("get_app_image", machine, app.id).then((data) => {
-			console.log("App image response:", data);
+			if (data) {
+				const [image, isDefault] = data;
+				setImage(image);
+				setIsDefaultImage(isDefault);
+			}
 		});
 
 		return () => {
@@ -45,7 +52,19 @@ export function AppTile({
 				window.ipc.send("stream", machine.config.uuid, app.id);
 			}}
 		>
-			{app.name}
+			<div className={styles.imageContainer}>
+				{image ? (
+					<>
+						<img src={image} className={styles.background} />
+						{isDefaultImage && (
+							<span className={styles.defaultTitle}>{app.name}</span>
+						)}
+					</>
+				) : (
+					<Ghost className={styles.loading} />
+				)}
+			</div>
+			{!isDefaultImage && <span className={styles.lowerTitle}>{app.name}</span>}
 		</Clickable>
 	);
 }
