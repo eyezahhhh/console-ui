@@ -8,11 +8,11 @@ import { promisify } from "util";
 import os from "os";
 import crypto from "crypto";
 import Https from "https";
-import IMoonlightHostStatus from "@interface/moonlight-host-status.interface";
 import { IpcMain } from "./ipc";
-import ISunshineApp from "@interface/sunshine-app.interface";
 import { ChildProcessWithoutNullStreams, spawn, exec } from "child_process";
 import Settings from "./settings";
+import IMachine from "@interface/machine.interface";
+import IMachineApp from "@interface/machine-app.interface";
 
 export class MoonlightEmbeddedController extends Logger {
 	private _isEnabled = false;
@@ -61,20 +61,17 @@ export class MoonlightEmbeddedController extends Logger {
 						this.error("Failed to scan for existing Moonlight hosts:", error),
 					);
 
-				const discovery = Bonjour().find(
+				Bonjour().find(
 					{
 						type: "nvstream",
 					},
 					(service) => {
-						this.log(
-							"Discovered NVIDIA Gamestream/Sunshine instance:",
-							service,
-						);
+						this.log("Discovered NVIDIA Gamestream/Sunshine instance");
 
 						try {
 							this.addHost(service.addresses[0], service.port);
 						} catch (e) {
-							this.error(e);
+							this.warn(e);
 						}
 					},
 				);
@@ -89,7 +86,8 @@ export class MoonlightEmbeddedController extends Logger {
 
 	addHost(address: string, port?: number) {
 		const existingHost = this.findHost(
-			(status) => status.address == address && status.port == port,
+			(info) =>
+				info.config.address == address && info.config.port == (port || 47989),
 		);
 		if (existingHost) {
 			throw new Error("Host already registered");
@@ -107,9 +105,9 @@ export class MoonlightEmbeddedController extends Logger {
 		return this._isEnabled;
 	}
 
-	findHost(predicate: (status: IMoonlightHostStatus) => boolean) {
+	findHost(predicate: (machine: IMachine) => boolean) {
 		for (let host of this.hosts) {
-			if (predicate(host.getStatus())) {
+			if (predicate(host.getMachine())) {
 				return host;
 			}
 		}
@@ -122,7 +120,7 @@ export class MoonlightEmbeddedController extends Logger {
 
 	getMachines() {
 		return this.getHosts()
-			.map((host) => host.asMachine())
+			.map((host) => host.getMachine())
 			.filter((machine) => !!machine);
 	}
 
@@ -183,18 +181,23 @@ export class MoonlightEmbeddedController extends Logger {
 		return !!this.stream;
 	}
 
-	startStream(host: MoonlightHost, app: ISunshineApp) {
+	startStream(host: MoonlightHost, app: IMachineApp) {
 		if (this.stream) {
 			throw new Error("Stream is already active");
 		}
 		return new Promise<void>((resolve) => {
-			const machine = host.asMachine();
+			const machine = host.getMachine();
 			const logger = new StandaloneLogger(
-				`Stream ${host.getAddress().address} - ${app.AppTitle}`,
+				`Stream ${host.getMachine().config.address} - ${app.name}`,
 			);
 			logger.log("Starting child process.");
 
-			const args = ["stream", host.getAddress().address, "-app", app.AppTitle];
+			const args = [
+				"stream",
+				host.getMachine().config.address,
+				"-app",
+				app.name,
+			];
 			const settings = this.settings.get();
 			args.push("-width", `${settings.resolution[0]}`);
 			args.push("-height", `${settings.resolution[1]}`);
@@ -238,7 +241,8 @@ export class MoonlightEmbeddedController extends Logger {
 				if (this.stream == child) {
 					this.stream = null;
 				}
-				const url = machine ? `/machine/${machine.uuid}` : "/";
+				const uuid = machine.config.discovered && machine.config.uuid;
+				const url = uuid ? `/machine/${uuid}` : "/";
 				this.ipc.getOrCreateWindow(url).show();
 				resolve();
 			});

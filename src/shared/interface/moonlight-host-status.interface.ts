@@ -1,20 +1,21 @@
 import SunshineCodec from "../enum/sunshine-codec";
+import IMachineApp from "./machine-app.interface";
 
-type IMoonlightHostStatus = {
-	address: string;
-	port: number;
-} & (
+type IMoonlightHostStatus =
 	| {
-			enabled: true;
-			uuid: string;
-			name: string;
+			online: false;
+	  }
+	| ({
+			online: true;
 			codecs: SunshineCodec[];
-			httpsPort: number;
-			version: string;
-			type: "sunshine" | "gamestream";
-	  }
-	| {
-			enabled: false;
-	  }
-);
+			isPairing: boolean;
+	  } & (
+			| {
+					isPaired: false;
+			  }
+			| {
+					isPaired: true;
+					apps: IMachineApp[];
+			  }
+	  ));
 export default IMoonlightHostStatus;

@@ -7,8 +7,8 @@ import styles from "./machine.module.scss";
 import { useEffect, useMemo, useState } from "react";
 import Modal from "@component/modal";
 import { getGamestreamHostName } from "@util/string.util";
-import MachineState from "@enum/machine-state.enum";
 import AppTile from "@component/app-tile";
+import { isMachineDiscovered, isMachinePaired } from "@util/object.util";
 
 export function MachinePage(props: IFocusableProps) {
 	const params = useParams();
@@ -17,17 +17,14 @@ export function MachinePage(props: IFocusableProps) {
 		onPin: setPin,
 	});
 	const isPairable = useMemo(() => {
-		return (
-			MachineState.PAIRING == machine?.state ||
-			MachineState.UNPAIRED == machine?.state
-		);
+		return !!machine?.online && (machine.isPairing || !machine.isPaired);
 	}, [machine]);
 
 	const name = useMemo(() => {
-		if (!machine) {
+		if (!isMachineDiscovered(machine)) {
 			return "Unknown Machine";
 		}
-		return machine.name || machine.address;
+		return machine.config.name || machine.config.address;
 	}, [machine]);
 
 	useEffect(() => {
@@ -41,7 +38,9 @@ export function MachinePage(props: IFocusableProps) {
 			<Modal open={!!machine && !!pin} onClose={() => setPin(null)}>
 				<span className={styles.pinMessage}>
 					Enter pin <b>{pin}</b> in{" "}
-					{getGamestreamHostName(machine?.type || null)}
+					{getGamestreamHostName(
+						(machine?.config.discovered && machine.config.type) || null,
+					)}
 				</span>
 				{(props) => (
 					<Button {...props} onEnter={() => setPin(null)}>
@@ -50,7 +49,7 @@ export function MachinePage(props: IFocusableProps) {
 				)}
 			</Modal>
 			<div className={styles.top}>
-				<span className={styles.title}>{`${name} - ${machine?.state}`}</span>
+				<span className={styles.title}>{`${name}`}</span>
 			</div>
 			{(props) => (
 				<NavList {...props} direction="horizontal" className={styles.buttonRow}>
@@ -62,10 +61,10 @@ export function MachinePage(props: IFocusableProps) {
 								focusedClassName={styles.focused}
 								focusOnCreate
 								onEnter={() => {
-									if (!machine) {
+									if (!isMachineDiscovered(machine)) {
 										return;
 									}
-									window.ipc.send("pair", machine.uuid);
+									window.ipc.send("pair", machine.config.uuid);
 								}}
 							>
 								Connect
@@ -73,7 +72,8 @@ export function MachinePage(props: IFocusableProps) {
 						))}
 				</NavList>
 			)}
-			{!!machine &&
+			{isMachineDiscovered(machine) &&
+				isMachinePaired(machine) &&
 				((props) => (
 					<NavList {...props} direction="horizontal" className={styles.appList}>
 						{machine.apps.length ? (
