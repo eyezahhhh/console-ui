@@ -28,9 +28,14 @@ Promise.all([app.whenReady(), settings.read()]).then(() => {
 			get_machines: async () => {
 				return getMoonlight().getMachines();
 			},
-			get_app_image: (machine, appId) => {
-				// const host = getMoonlight().getHosts().find((host) => host)
-				return null;
+			get_app_image: async (machine, appId) => {
+				const host = getMoonlight()
+					.getHosts()
+					.find((host) => host.getAddress() == machine.config.address);
+				if (!host) {
+					return null;
+				}
+				return host.getAppImage(appId);
 			},
 			get_settings: () => settings.get(),
 			save_settings: (newSettings) => settings.validateAndSet(newSettings),

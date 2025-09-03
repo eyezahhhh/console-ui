@@ -92,18 +92,22 @@ export function SettingsPage(props: IFocusableProps) {
 		<NavList {...props} direction="vertical" className={styles.container}>
 			<span className={styles.version}>Console UI {appVersion}</span>
 			{(props) => (
-				<Button
-					{...props}
-					onEnter={() => window.ipc.send("check_updates")}
-					disabled={isUpdateChecking}
-				>
-					Check for updates
-				</Button>
-			)}
-			{(props) => (
-				<Button {...props} onEnter={() => navigate("/gamepad-debug")}>
-					Debug Gamepads
-				</Button>
+				<NavList {...props} direction="horizontal" className={styles.buttons}>
+					{(props) => (
+						<Button
+							{...props}
+							onEnter={() => window.ipc.send("check_updates")}
+							disabled={isUpdateChecking}
+						>
+							Check for updates
+						</Button>
+					)}
+					{(props) => (
+						<Button {...props} onEnter={() => navigate("/gamepad-debug")}>
+							Debug Gamepads
+						</Button>
+					)}
+				</NavList>
 			)}
 
 			<span className={styles.label}>Moonlight-Embedded command</span>
