@@ -1,5 +1,5 @@
 import SunshineCodec from "../enum/sunshine-codec";
-import ISunshineApp from "./sunshine-app.interface";
+import IMachineApp from "./machine-app.interface";
 
 type IMoonlightHostStatus =
 	| {
@@ -15,7 +15,7 @@ type IMoonlightHostStatus =
 			  }
 			| {
 					isPaired: true;
-					apps: ISunshineApp[];
+					apps: IMachineApp[];
 			  }
 	  ));
 export default IMoonlightHostStatus;
