@@ -12,15 +12,15 @@ export interface Props extends IFocusableProps {
 	disabledClassName?: string;
 	focusOnCreate?: boolean;
 	disabled?: boolean;
-	onMoveUp?: (key: {}) => void;
-	onMoveDown?: (key: {}) => void;
-	onMoveLeft?: (key: {}) => void;
-	onMoveRight?: (key: {}) => void;
-	onEnter?: (key: {}) => void;
-	onBack?: (key: {}) => void;
-	onMenu?: (key: {}) => void;
-	onOptions?: (key: {}) => void;
-	onDelete?: (key: {}) => void;
+	onMoveUp?: ((key: {}) => void) | false | null;
+	onMoveDown?: ((key: {}) => void) | false | null;
+	onMoveLeft?: ((key: {}) => void) | false | null;
+	onMoveRight?: ((key: {}) => void) | false | null;
+	onEnter?: ((key: {}) => void) | false | null;
+	onBack?: ((key: {}) => void) | false | null;
+	onMenu?: ((key: {}) => void) | false | null;
+	onOptions?: ((key: {}) => void) | false | null;
+	onDelete?: ((key: {}) => void) | false | null;
 }
 
 export function Clickable({
@@ -48,7 +48,10 @@ export function Clickable({
 			setFocused(key, action);
 		}
 
-		const callbacks: Record<MovementAction, ((key: {}) => void) | undefined> = {
+		const callbacks: Record<
+			MovementAction,
+			((key: {}) => void) | undefined | false | null
+		> = {
 			[MovementAction.UP]: onMoveUp,
 			[MovementAction.DOWN]: onMoveDown,
 			[MovementAction.LEFT]: onMoveLeft,

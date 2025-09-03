@@ -1,11 +1,7 @@
-import MachineState from "@enum/machine-state.enum";
-import ISunshineApp from "./sunshine-app.interface";
+import IMoonlightHostStatus from "./moonlight-host-status.interface";
+import IMoonlightHostDiskInfo from "./moonlight-host-disk-info.interface";
 
-export default interface IMachine {
-	uuid: string;
-	address: string;
-	name?: string;
-	state: MachineState;
-	type?: "sunshine" | "gamestream";
-	apps: ISunshineApp[];
-}
+type IMachine = IMoonlightHostStatus & {
+	config: IMoonlightHostDiskInfo;
+};
+export default IMachine;
