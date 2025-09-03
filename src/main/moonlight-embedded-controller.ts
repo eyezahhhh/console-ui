@@ -8,12 +8,11 @@ import { promisify } from "util";
 import os from "os";
 import crypto from "crypto";
 import Https from "https";
-import IMoonlightHostStatus from "@interface/moonlight-host-status.interface";
 import { IpcMain } from "./ipc";
-import ISunshineApp from "@interface/sunshine-app.interface";
 import { ChildProcessWithoutNullStreams, spawn, exec } from "child_process";
 import Settings from "./settings";
 import IMachine from "@interface/machine.interface";
+import IMachineApp from "@interface/machine-app.interface";
 
 export class MoonlightEmbeddedController extends Logger {
 	private _isEnabled = false;
@@ -106,9 +105,9 @@ export class MoonlightEmbeddedController extends Logger {
 		return this._isEnabled;
 	}
 
-	findHost(predicate: (hostInfo: IMachine) => boolean) {
+	findHost(predicate: (machine: IMachine) => boolean) {
 		for (let host of this.hosts) {
-			if (predicate(host.getStatus())) {
+			if (predicate(host.getMachine())) {
 				return host;
 			}
 		}
@@ -121,7 +120,7 @@ export class MoonlightEmbeddedController extends Logger {
 
 	getMachines() {
 		return this.getHosts()
-			.map((host) => host.getStatus())
+			.map((host) => host.getMachine())
 			.filter((machine) => !!machine);
 	}
 
@@ -182,22 +181,22 @@ export class MoonlightEmbeddedController extends Logger {
 		return !!this.stream;
 	}
 
-	startStream(host: MoonlightHost, app: ISunshineApp) {
+	startStream(host: MoonlightHost, app: IMachineApp) {
 		if (this.stream) {
 			throw new Error("Stream is already active");
 		}
 		return new Promise<void>((resolve) => {
-			const machine = host.getStatus();
+			const machine = host.getMachine();
 			const logger = new StandaloneLogger(
-				`Stream ${host.getStatus().config.address} - ${app.AppTitle}`,
+				`Stream ${host.getMachine().config.address} - ${app.name}`,
 			);
 			logger.log("Starting child process.");
 
 			const args = [
 				"stream",
-				host.getStatus().config.address,
+				host.getMachine().config.address,
 				"-app",
-				app.AppTitle,
+				app.name,
 			];
 			const settings = this.settings.get();
 			args.push("-width", `${settings.resolution[0]}`);
