@@ -12,6 +12,6 @@ type MainToRendererHandler = {
 	get_available_update: [[], IAvailableUpdate | null];
 	get_update_status: [[], [boolean, ProgressInfo | null]];
 	get_version: [[], string];
-	get_app_image: [[IMachine, number], string | null];
+	get_app_image: [[IMachine, number], [string, boolean] | null];
 };
 export default MainToRendererHandler;
