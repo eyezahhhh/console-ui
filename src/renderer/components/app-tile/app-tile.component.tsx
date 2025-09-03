@@ -1,12 +1,12 @@
 import IFocusableProps from "@interface/focusable-props.interface";
 import styles from "./app-tile.module.scss";
-import ISunshineApp from "@interface/sunshine-app.interface";
 import Clickable from "@component/clickable";
 import { useEffect } from "react";
 import IDiscoveredMachine from "@interface/discovered-machine.interface";
+import IMachineApp from "@interface/machine-app.interface";
 
 interface Props extends IFocusableProps {
-	app: ISunshineApp;
+	app: IMachineApp;
 	machine: IDiscoveredMachine;
 	focusOnCreate?: boolean;
 }
@@ -22,16 +22,16 @@ export function AppTile({
 	console.log({ app });
 
 	useEffect(() => {
-		console.log("App ID:", app.ID);
+		console.log("App ID:", app.id);
 		let active = true;
-		window.ipc.invoke("get_app_image", machine, app.ID).then((data) => {
+		window.ipc.invoke("get_app_image", machine, app.id).then((data) => {
 			console.log("App image response:", data);
 		});
 
 		return () => {
 			active = false;
 		};
-	}, [app.ID, machine]);
+	}, [app.id, machine]);
 
 	return (
 		<Clickable
@@ -42,10 +42,10 @@ export function AppTile({
 			className={styles.container}
 			focusedClassName={styles.focused}
 			onEnter={() => {
-				window.ipc.send("stream", machine.config.uuid, app.ID);
+				window.ipc.send("stream", machine.config.uuid, app.id);
 			}}
 		>
-			{app.AppTitle}
+			{app.name}
 		</Clickable>
 	);
 }

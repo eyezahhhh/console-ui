@@ -80,7 +80,7 @@ export function MachinePage(props: IFocusableProps) {
 							machine.apps.map((app, index) => (props) => (
 								<AppTile
 									{...props}
-									key={app.ID}
+									key={app.id}
 									focusOnCreate={!index}
 									app={app}
 									machine={machine}
