@@ -1,0 +1,17 @@
+.positioner {
+	position: fixed;
+	z-index: 100;
+
+	.container {
+		display: flex;
+		flex-direction: column;
+
+		.entry {
+			background: red;
+
+			&.focused {
+				background: blue;
+			}
+		}
+	}
+}
