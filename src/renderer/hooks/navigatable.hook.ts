@@ -90,8 +90,8 @@ export default function useNavigatable<T extends HTMLElement>(
 				ArrowDown: MovementAction.DOWN,
 				ArrowLeft: MovementAction.LEFT,
 				ArrowRight: MovementAction.RIGHT,
+				Enter: event.shiftKey ? MovementAction.OPTIONS : MovementAction.ENTER,
 				Escape: MovementAction.BACK,
-				Enter: MovementAction.ENTER,
 			};
 
 			const action = keys[event.key];
