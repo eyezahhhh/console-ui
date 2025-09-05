@@ -1,30 +1,40 @@
-import { useCallback, useEffect } from "react";
 import useContextMenuStore, { Menu } from "@state/context-menu.store";
-import useFocusStore from "@state/focus.store";
+import { useState, useMemo, useEffect, useCallback } from "react";
 
-export default function useContextMenu() {
-	const { setMenu: setContextMenu, popupKey, menu } = useContextMenuStore();
-	const { focusedComponent, isFocusedChildOf } = useFocusStore();
+export default function useContextMenu(
+	createMenu: (key: {}) => Menu<Record<string, string>>,
+) {
+	const { menu: currentMenu, setMenu } = useContextMenuStore();
+	const [menuKey, setMenuKey] = useState<{} | null>(null);
 
-	const setMenu = useCallback(
-		(menu: Menu, key: {}) => {
-			if (focusedComponent?.key != key) {
-				console.error(
-					"Can't open context menu for component because it isn't focused",
-				);
+	const isActive = useMemo(() => {
+		return currentMenu?.key === menuKey;
+	}, [currentMenu, menuKey]);
+
+	const updateAndShowMenu = useCallback(
+		(noRefocus: boolean) => {
+			if (!menuKey) {
+				return;
 			}
+			const menu = createMenu(menuKey);
+			setMenu(menu, noRefocus);
 		},
-		[setContextMenu, focusedComponent],
+		[createMenu, menuKey, setMenu],
 	);
 
 	useEffect(() => {
-		console.log(menu, isFocusedChildOf(popupKey));
-		if (menu && !isFocusedChildOf(popupKey)) {
-			setContextMenu(null);
+		if (isActive) {
+			updateAndShowMenu(true);
 		}
-	}, [focusedComponent, popupKey, menu]);
+	}, [updateAndShowMenu, isActive]);
 
-	return {
-		setMenu,
-	};
+	const openMenu = useCallback(
+		(key: {}) => {
+			setMenuKey(key);
+			updateAndShowMenu(false);
+		},
+		[updateAndShowMenu],
+	);
+
+	return openMenu;
 }

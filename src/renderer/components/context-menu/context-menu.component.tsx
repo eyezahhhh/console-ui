@@ -4,12 +4,14 @@ import NavList from "@component/nav-list";
 import Clickable from "@component/clickable";
 import { useEffect, useMemo, useState } from "react";
 import useFocusStore from "@state/focus.store";
+import MovementAction from "@enum/movement-action.enum";
 
 export function ContextMenu() {
 	const { menu, setPopupKey, popupKey, setMenu } = useContextMenuStore();
 	const key = useMemo(() => ({}), []);
 	const [position, setPosition] = useState<[number, number]>([0, 0]);
-	const { focusedComponent, isFocusedChildOf } = useFocusStore();
+	const { focusedComponent, isFocusedChildOf, setFocused } = useFocusStore();
+	const [isFocused, setIsFocused] = useState(false);
 
 	useEffect(() => {
 		setPopupKey(key);
@@ -28,7 +30,6 @@ export function ContextMenu() {
 				return;
 			}
 			const rect = element.getBoundingClientRect();
-			console.log(rect.x, rect.y);
 			setPosition([rect.x, rect.y]);
 
 			setTimeout(() => {
@@ -44,11 +45,22 @@ export function ContextMenu() {
 	}, [menu]);
 
 	useEffect(() => {
-		console.log(menu, isFocusedChildOf(popupKey));
-		// if (menu && !isFocusedChildOf(popupKey)) {
-		// 	setMenu(null);
-		// }
-	}, [focusedComponent, popupKey, menu]);
+		if (isFocusedChildOf(popupKey)) {
+			setIsFocused(true);
+			return;
+		} else {
+			setIsFocused(false);
+		}
+		if (!menu) {
+			return;
+		}
+
+		if (!isFocused && isFocusedChildOf(menu.key)) {
+			return;
+		}
+
+		setMenu(null);
+	}, [focusedComponent, popupKey, menu, isFocused]);
 
 	if (!menu) {
 		return null;
@@ -69,6 +81,10 @@ export function ContextMenu() {
 				className={styles.container}
 				setUnfocused={(action) => {
 					console.log("Context menu unfocus", action);
+					if (action == MovementAction.BACK) {
+						setFocused(menu.key, action);
+						setMenu(null);
+					}
 				}}
 			>
 				{Object.entries(menu.options).map(([id, name], index) => (props) => (
@@ -78,6 +94,7 @@ export function ContextMenu() {
 						className={styles.entry}
 						focusedClassName={styles.focused}
 						focusOnCreate={!index}
+						onEnter={() => menu.onSelect(id)}
 					>
 						{name}
 					</Clickable>

@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./machine.module.scss";
 import IMachine from "@interface/machine.interface";
 import IFocusableProps from "@interface/focusable-props.interface";
 import { useNavigate } from "react-router";
 import Clickable from "@component/clickable";
 import { isMachineOnline } from "@util/object.util";
-import useContextMenuStore from "@state/context-menu.store";
+import { Menu } from "@state/context-menu.store";
+import useContextMenu from "@hook/context-menu.hook";
 
 interface Props extends IFocusableProps {
 	machine?: IMachine;
@@ -13,8 +14,27 @@ interface Props extends IFocusableProps {
 
 export function Machine({ machine, parentKey, setUnfocused, index }: Props) {
 	const navigate = useNavigate();
-	const { setMenu } = useContextMenuStore();
 	const ref = useRef<HTMLDivElement>(null);
+
+	const openMenu = useContextMenu(
+		useCallback(
+			(key) => ({
+				ref: ref.current!,
+				key,
+				options: {
+					delete: "Delete Machine",
+				},
+				onSelect: (option) => {
+					switch (option) {
+						case "delete":
+							console.log("Deleting machine");
+							break;
+					}
+				},
+			}),
+			[],
+		) as (key: {}) => Menu<Record<string, string>>,
+	);
 
 	const uuid = useMemo(() => {
 		return (machine?.config.discovered && machine.config.uuid) || null;
@@ -37,21 +57,7 @@ export function Machine({ machine, parentKey, setUnfocused, index }: Props) {
 			onEnter={
 				isMachineOnline(machine || null) && (() => navigate(`/machine/${uuid}`))
 			}
-			onOptions={() =>
-				setMenu(
-					ref.current
-						? {
-								ref: ref.current,
-								options: {
-									test1: "Test 1",
-									test2: "Test 2",
-									test3: "Test 3",
-									test4: "Test 4",
-								},
-							}
-						: null,
-				)
-			}
+			onOptions={(key) => openMenu(key)}
 		>
 			<div className={styles.content} ref={ref}>
 				<span className={styles.title}>{name}</span>
