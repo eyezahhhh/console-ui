@@ -1,30 +1,31 @@
 import { create } from "zustand";
+import useFocusStore from "./focus.store";
+import MovementAction from "@enum/movement-action.enum";
 
-export interface Menu {
+export type Menu<T extends Record<string, string>> = {
 	ref: HTMLElement;
-	options: Record<string, string>;
-}
+	key: {};
+	options: T;
+	onSelect: (option: keyof T) => void;
+};
 
 interface IContextMenuState {
-	menu: Menu | null;
-	setMenu: (menu: Menu | null) => () => void;
+	menu: Menu<Record<string, string>> | null;
+	setMenu: <T extends Record<string, string>>(
+		menu: Menu<T> | null,
+		noRefocus?: boolean,
+	) => void;
 	popupKey: {};
 	setPopupKey: (key: {}) => void;
 }
 
-const useContextMenuStore = create<IContextMenuState>((set, get) => ({
+const useContextMenuStore = create<IContextMenuState>((set) => ({
 	menu: null,
-	setMenu: (menu) => {
+	setMenu: (menu, noRefocus) => {
+		if (menu && !noRefocus) {
+			useFocusStore.getState().setFocused(menu.key, MovementAction.OPTIONS);
+		}
 		set({ menu });
-
-		return () => {
-			// close menu if it hasn't already
-			if (get().menu == menu) {
-				set({
-					menu: null,
-				});
-			}
-		};
 	},
 	popupKey: {},
 	setPopupKey: (key) => set({ popupKey: key }),
