@@ -114,7 +114,6 @@ const useFocusStore = create<IFocusState>((set, get) => ({
 				return false;
 			}
 			connectionPositions.sort((a, b) => a.distance - b.distance);
-			console.log({ connectionPositions });
 
 			set((oldState) => ({
 				lastFocusedComponent: oldState.focusedComponent,
@@ -195,8 +194,6 @@ const useFocusStore = create<IFocusState>((set, get) => ({
 			if (connectionPositions.length > 1) {
 				connectionPositions.sort((a, b) => a.distance - b.distance);
 			}
-
-			console.log({ connectionPositions });
 
 			set((oldState) => ({
 				lastFocusedComponent: oldState.focusedComponent,
