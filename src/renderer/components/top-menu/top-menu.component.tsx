@@ -6,7 +6,7 @@ import { useNavigate } from "react-router";
 import useGamepads from "@hook/gamepads.hook";
 import GamepadIndicator from "@component/gamepad-indicator";
 import PowerMenu from "@component/power-menu";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
 	Computer,
 	PowerSettingsNew,
@@ -21,9 +21,15 @@ interface Props extends IFocusableProps {}
 export function TopMenu(props: Props) {
 	const navigate = useNavigate();
 	const gamepads = useGamepads();
-	const { availableUpdate } = useUpdate();
+	const { availableUpdate, isDownloading } = useUpdate();
 	const [powerMenuOpen, setPowerMenuOpen] = useState(false);
 	const [updateModalOpen, setUpdateModalOpen] = useState(false);
+
+	useEffect(() => {
+		if (updateModalOpen && isDownloading) {
+			setUpdateModalOpen(false);
+		}
+	}, [updateModalOpen, isDownloading]);
 
 	return (
 		<div className={styles.container}>
@@ -44,15 +50,17 @@ export function TopMenu(props: Props) {
 				parentKey={props.parentKey}
 				index={props.index}
 			>
-				{(props) => (
-					<TopMenuButton
-						{...props}
-						icon={<Computer />}
-						key="machines"
-						onEnter={() => navigate("/")}
-					/>
-				)}
-				{!!availableUpdate &&
+				{!isDownloading &&
+					((props) => (
+						<TopMenuButton
+							{...props}
+							icon={<Computer />}
+							key="machines"
+							onEnter={() => navigate("/")}
+						/>
+					))}
+				{!isDownloading &&
+					!!availableUpdate &&
 					((props) => (
 						<TopMenuButton
 							{...props}
@@ -61,14 +69,15 @@ export function TopMenu(props: Props) {
 							onEnter={() => setUpdateModalOpen(true)}
 						/>
 					))}
-				{(props) => (
-					<TopMenuButton
-						{...props}
-						icon={<Settings />}
-						key="settings"
-						onEnter={() => navigate("/settings")}
-					/>
-				)}
+				{!isDownloading &&
+					((props) => (
+						<TopMenuButton
+							{...props}
+							icon={<Settings />}
+							key="settings"
+							onEnter={() => navigate("/settings")}
+						/>
+					))}
 				{(props) => (
 					<TopMenuButton
 						{...props}
