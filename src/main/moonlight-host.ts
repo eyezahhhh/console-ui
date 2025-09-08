@@ -731,7 +731,7 @@ export default class MoonlightHost extends Emitter<Events> {
 		});
 
 		return Axios.create({
-			baseURL: `https://${this.data.address}:${this.httpsPort}`,
+			baseURL: `https://${this.getAddress()}:${this.httpsPort}`,
 			httpsAgent,
 		});
 	}

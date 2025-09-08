@@ -68,8 +68,18 @@ export class MoonlightEmbeddedController extends Logger {
 					(service) => {
 						this.log("Discovered NVIDIA Gamestream/Sunshine instance");
 
+						const ipv4 = service.addresses.find(
+							(address) => address.split(".").length == 4,
+						);
+						if (!ipv4) {
+							this.warn(
+								"NVIDIA Gamestream/Sunshine instance wasn't reachable via an IPv4 address",
+							);
+							return;
+						}
+
 						try {
-							this.addHost(service.addresses[0], service.port);
+							this.addHost(ipv4, service.port);
 						} catch (e) {
 							this.warn(e);
 						}
