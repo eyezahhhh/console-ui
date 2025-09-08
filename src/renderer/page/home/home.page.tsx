@@ -4,6 +4,7 @@ import Modal from "@component/modal";
 import NavList from "@component/nav-list";
 import TextInput from "@component/text-input";
 import IFocusableProps from "@interface/focusable-props.interface";
+import { abbreviateMeasurement } from "@util/number.util";
 import { useEffect, useState } from "react";
 
 export function HomePage(props: IFocusableProps) {
