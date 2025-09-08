@@ -1,0 +1,35 @@
+.positioner {
+	position: fixed;
+	z-index: 100;
+
+	.container {
+		display: flex;
+		flex-direction: column;
+		background: var(--color-background-surface);
+		border: 1px solid var(--color-background-primary);
+		box-shadow: 5px 5px 0 #000;
+		animation: #{intro} 0.2s ease-out;
+
+		.entry {
+			background: transparent;
+			font-size: 2rem;
+			color: var(--color-text);
+
+			&.focused {
+				background: var(--color-background-primary-focus);
+				color: var(--color-text-primary-focus);
+			}
+		}
+	}
+}
+
+@keyframes #{intro} {
+	0% {
+		transform: translateY(10px);
+		opacity: 0;
+	}
+	100% {
+		transform: translateY(0);
+		opacity: 1;
+	}
+}
