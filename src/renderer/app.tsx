@@ -10,25 +10,22 @@ import HomePage from "./page/home";
 import MachinePage from "./page/machine";
 import SettingsPage from "./page/settings";
 import GamepadDebugPage from "./page/gamepad-debug";
-import MovementAction from "@enum/movement-action.enum";
-import DownloadModal from "@component/download-modal";
 import ContextMenu from "@component/context-menu";
+import useUpdate from "@hook/update.hook";
+import UpdatingPage from "./page/updating";
 
 function App() {
 	const key = useMemo(() => ({}), []);
 	const navigate = useNavigate();
+	const { isDownloading } = useUpdate();
 
 	return (
 		<div className={styles.container}>
-			<DownloadModal />
 			<ContextMenu />
 			<NavList
 				parentKey={key}
 				setUnfocused={(action) => {
-					if (action == MovementAction.BACK) {
-						// navigate(-1);
-						// todo: after navigating, focus a component
-					} else {
+					if (!isDownloading) {
 						console.log(
 							"Unfocus event propagated all the way to App component",
 						);
@@ -38,17 +35,19 @@ function App() {
 				direction="vertical"
 			>
 				{(props) => <TopMenu {...props} key="top" />}
-				{(props) => (
-					<PageRouter
-						{...props}
-						routes={{
-							"/": (props) => <HomePage {...props} />,
-							"machine/:machine": (props) => <MachinePage {...props} />,
-							settings: (props) => <SettingsPage {...props} />,
-							"gamepad-debug": (props) => <GamepadDebugPage {...props} />,
-						}}
-					/>
-				)}
+				{isDownloading
+					? (props) => <UpdatingPage {...props} />
+					: (props) => (
+							<PageRouter
+								{...props}
+								routes={{
+									"/": (props) => <HomePage {...props} />,
+									"machine/:machine": (props) => <MachinePage {...props} />,
+									settings: (props) => <SettingsPage {...props} />,
+									"gamepad-debug": (props) => <GamepadDebugPage {...props} />,
+								}}
+							/>
+						)}
 			</NavList>
 		</div>
 	);
