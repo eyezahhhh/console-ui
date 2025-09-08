@@ -79,7 +79,9 @@ export class MoonlightEmbeddedController extends Logger {
 								}
 
 								try {
-									this.addHost(ipv4, service.port);
+									this.addHost(ipv4, {
+										port: service.port,
+									});
 								} catch (e) {
 									this.warn(e);
 								}
@@ -107,15 +109,28 @@ export class MoonlightEmbeddedController extends Logger {
 		});
 	}
 
-	addHost(address: string, port?: number) {
+	addHost(
+		address: string,
+		options: {
+			port?: number;
+			known?: boolean;
+		} = {},
+	) {
 		const existingHost = this.findHost(
 			(info) =>
-				info.config.address == address && info.config.port == (port || 47989),
+				info.config.address == address &&
+				info.config.port == (options.port || 47989),
 		);
 		if (existingHost) {
 			throw new Error("Host already registered");
 		}
-		const host = new MoonlightHost(address, port || null, this, this.ipc);
+		const host = new MoonlightHost(
+			address,
+			options.port || null,
+			this,
+			this.ipc,
+			!!options.known,
+		);
 		this.hosts.add(host);
 		host.addEventListener("status", () => {
 			this.hostsUpdated();
@@ -143,8 +158,8 @@ export class MoonlightEmbeddedController extends Logger {
 
 	getMachines() {
 		return this.getHosts()
-			.map((host) => host.getMachine())
-			.filter((machine) => !!machine);
+			.filter((host) => host.isKnown())
+			.map((host) => host.getMachine());
 	}
 
 	private async generateKeys() {
