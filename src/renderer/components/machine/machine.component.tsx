@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import styles from "./machine.module.scss";
 import IMachine from "@interface/machine.interface";
 import IFocusableProps from "@interface/focusable-props.interface";
@@ -27,12 +27,16 @@ export function Machine({ machine, parentKey, setUnfocused, index }: Props) {
 				onSelect: (option) => {
 					switch (option) {
 						case "delete":
-							console.log("Deleting machine");
+							if (machine) {
+								console.log("Deleting machine");
+								window.ipc.send("delete_machine", machine);
+							}
+
 							break;
 					}
 				},
 			}),
-			[],
+			[machine],
 		) as (key: {}) => Menu<Record<string, string>>,
 	);
 
@@ -57,7 +61,7 @@ export function Machine({ machine, parentKey, setUnfocused, index }: Props) {
 			onEnter={
 				isMachineOnline(machine || null) && (() => navigate(`/machine/${uuid}`))
 			}
-			onOptions={(key) => openMenu(key)}
+			onOptions={openMenu}
 		>
 			<div className={styles.content} ref={ref}>
 				<span className={styles.title}>{name}</span>

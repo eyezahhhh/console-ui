@@ -1,11 +1,11 @@
 import useContextMenuStore, { Menu } from "@state/context-menu.store";
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useMemo, useCallback, useLayoutEffect, useRef } from "react";
 
 export default function useContextMenu(
 	createMenu: (key: {}) => Menu<Record<string, string>>,
 ) {
 	const { menu: currentMenu, setMenu } = useContextMenuStore();
-	const [menuKey, setMenuKey] = useState<{} | null>(null);
+	const menuKey = useRef<{} | null>(null);
 
 	const isActive = useMemo(() => {
 		return currentMenu?.key === menuKey;
@@ -13,16 +13,17 @@ export default function useContextMenu(
 
 	const updateAndShowMenu = useCallback(
 		(noRefocus: boolean) => {
-			if (!menuKey) {
+			let key = menuKey.current;
+			if (!key) {
 				return;
 			}
-			const menu = createMenu(menuKey);
+			const menu = createMenu(key);
 			setMenu(menu, noRefocus);
 		},
-		[createMenu, menuKey, setMenu],
+		[createMenu, setMenu],
 	);
 
-	useEffect(() => {
+	useLayoutEffect(() => {
 		if (isActive) {
 			updateAndShowMenu(true);
 		}
@@ -30,7 +31,8 @@ export default function useContextMenu(
 
 	const openMenu = useCallback(
 		(key: {}) => {
-			setMenuKey(key);
+			// setMenuKey(key);
+			menuKey.current = key;
 			updateAndShowMenu(false);
 		},
 		[updateAndShowMenu],
