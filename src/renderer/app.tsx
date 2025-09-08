@@ -12,6 +12,7 @@ import SettingsPage from "./page/settings";
 import GamepadDebugPage from "./page/gamepad-debug";
 import MovementAction from "@enum/movement-action.enum";
 import DownloadModal from "@component/download-modal";
+import ContextMenu from "@component/context-menu";
 
 function App() {
 	const key = useMemo(() => ({}), []);
@@ -20,6 +21,7 @@ function App() {
 	return (
 		<div className={styles.container}>
 			<DownloadModal />
+			<ContextMenu />
 			<NavList
 				parentKey={key}
 				setUnfocused={(action) => {

@@ -82,6 +82,18 @@ export class MoonlightEmbeddedController extends Logger {
 					`Moonlight Embedded command "${this.command}" wasn't found. Moonlight functionality is disabled.`,
 				);
 			});
+
+		this.ipc.addEventListener("delete_machine", (machine) => {
+			const host = this.findHost(
+				(m) => m.config.address == machine.config.address,
+			);
+			if (!host) {
+				return;
+			}
+			host.destroy();
+			this.hosts.delete(host);
+			this.hostsUpdated();
+		});
 	}
 
 	addHost(address: string, port?: number) {

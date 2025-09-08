@@ -48,7 +48,6 @@ export function SettingsPage(props: IFocusableProps) {
 	const [exitCommand, setExitCommand] = useState(settings.exitCommand);
 
 	useEffect(() => {
-		console.log("Settings changed:", settings);
 		setMoonlightCommand(settings.moonlightCommand);
 		setResolution(settings.resolution);
 		setRotation(settings.rotation);
@@ -247,7 +246,6 @@ export function SettingsPage(props: IFocusableProps) {
 				<Button
 					{...props}
 					onEnter={() => {
-						console.log("Save new settings");
 						setIsSaving(true);
 
 						window.ipc

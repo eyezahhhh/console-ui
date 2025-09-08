@@ -4,7 +4,7 @@ import { StandaloneLogger } from "./logger";
 import { MoonlightEmbeddedController } from "./moonlight-embedded-controller";
 import crypto from "crypto";
 import forge from "node-forge";
-import { mkdir, readFile, writeFile } from "fs";
+import { mkdir, readFile, rm, writeFile } from "fs";
 import { app } from "electron";
 import path from "path";
 import { promisify } from "util";
@@ -36,6 +36,8 @@ export default class MoonlightHost extends Emitter<Events> {
 	private infoFetchAbort: AbortController | null = null;
 	private logger: StandaloneLogger;
 	private pairAbort: AbortController | null = null;
+	private destroyed = false;
+	private readonly destroyCallbacks = new Set<() => void>();
 
 	private data: IMoonlightHostDiskInfo;
 	private status: IMoonlightHostStatus = {
@@ -80,51 +82,59 @@ export default class MoonlightHost extends Emitter<Events> {
 			.finally(() => this.fetchServerInfo())
 			.catch((e) => this.logger.error("Error while fetching server info:", e));
 
-		ipc.addEventListener("pair", (uuid) => {
-			if (!uuid || uuid != this.uuid) {
-				return;
-			}
+		this.destroyCallbacks.add(
+			ipc.addEventListener("pair", (uuid) => {
+				if (!uuid || uuid != this.uuid) {
+					return;
+				}
 
-			if (this.status.online && this.status.isPaired) {
-				this.logger.log(
-					"Received pairing request but host is already paired, ignoring.",
-				);
-			} else {
-				this.logger.log("Received pairing request.");
-				this.pair().catch((error) =>
-					this.logger.error("Failed to pair", error),
-				);
-			}
-		});
+				if (this.status.online && this.status.isPaired) {
+					this.logger.log(
+						"Received pairing request but host is already paired, ignoring.",
+					);
+				} else {
+					this.logger.log("Received pairing request.");
+					this.pair().catch((error) =>
+						this.logger.error("Failed to pair", error),
+					);
+				}
+			}),
+		);
 
-		ipc.addEventListener("stream", (uuid, appId) => {
-			if (!uuid || uuid != this.uuid) {
-				return;
-			}
+		this.destroyCallbacks.add(
+			ipc.addEventListener("stream", (uuid, appId) => {
+				if (!uuid || uuid != this.uuid) {
+					return;
+				}
 
-			if (!this.status.online || !this.status.isPaired) {
-				this.logger.log(
-					"Received request for app list but host isn't paired or online.",
-				);
-				return;
-			}
+				if (!this.status.online || !this.status.isPaired) {
+					this.logger.log(
+						"Received request for app list but host isn't paired or online.",
+					);
+					return;
+				}
 
-			const app = this.status.apps.find((app) => app.id == appId);
-			if (!app) {
-				this.logger.log(
-					`Received request to stream app "${appId}" but it doesn't exist.`,
-				);
-				return;
-			}
+				const app = this.status.apps.find((app) => app.id == appId);
+				if (!app) {
+					this.logger.log(
+						`Received request to stream app "${appId}" but it doesn't exist.`,
+					);
+					return;
+				}
 
-			this.logger.log(`Starting to stream app "${app.name}"`);
-			this.controller.startStream(this, app).then(() => {
-				this.logger.log("Stream has finished");
-			});
-		});
+				this.logger.log(`Starting to stream app "${app.name}"`);
+				this.controller.startStream(this, app).then(() => {
+					this.logger.log("Stream has finished");
+				});
+			}),
+		);
 	}
 
 	async fetchServerInfo(): Promise<void> {
+		if (this.destroyed) {
+			throw new Error("Host is destroyed");
+		}
+
 		const controller = new AbortController();
 
 		const fetch = async (
@@ -365,6 +375,9 @@ export default class MoonlightHost extends Emitter<Events> {
 		dataCallback: (oldInfo: IMoonlightHostDiskInfo) => IMoonlightHostDiskInfo,
 		forceOverwrite?: boolean,
 	) {
+		if (this.destroyed) {
+			throw new Error("Host is destroyed");
+		}
 		const oldSerialized = JSON.stringify(this.data);
 		const newData = {
 			...dataCallback(this.data),
@@ -401,6 +414,9 @@ export default class MoonlightHost extends Emitter<Events> {
 	}
 
 	async pair() {
+		if (this.destroyed) {
+			throw new Error("Host is destroyed");
+		}
 		if (this.infoFetchAbort) {
 			this.infoFetchAbort.abort();
 		}
@@ -756,5 +772,27 @@ export default class MoonlightHost extends Emitter<Events> {
 			this.logger.error("Failed to get box art", e);
 			return null;
 		}
+	}
+
+	destroy() {
+		this.destroyed = true;
+		this.pairAbort?.abort();
+		this.infoFetchAbort?.abort();
+		for (let callback of this.destroyCallbacks) {
+			callback();
+		}
+
+		try {
+			const fileName = this.getStorageFile();
+			promisify(rm)(fileName, {
+				force: true,
+			})
+				.then(() => {
+					this.logger.log("Removed host file.");
+				})
+				.catch((e) => {
+					this.logger.error("failed to remove host file:", e);
+				});
+		} catch {}
 	}
 }
