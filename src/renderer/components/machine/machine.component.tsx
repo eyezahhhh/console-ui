@@ -1,10 +1,12 @@
-import { useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import styles from "./machine.module.scss";
 import IMachine from "@interface/machine.interface";
 import IFocusableProps from "@interface/focusable-props.interface";
 import { useNavigate } from "react-router";
 import Clickable from "@component/clickable";
 import { isMachineOnline } from "@util/object.util";
+import { Menu } from "@state/context-menu.store";
+import useContextMenu from "@hook/context-menu.hook";
 
 interface Props extends IFocusableProps {
 	machine?: IMachine;
@@ -12,6 +14,31 @@ interface Props extends IFocusableProps {
 
 export function Machine({ machine, parentKey, setUnfocused, index }: Props) {
 	const navigate = useNavigate();
+	const ref = useRef<HTMLDivElement>(null);
+
+	const openMenu = useContextMenu(
+		useCallback(
+			(key) => ({
+				ref: ref.current!,
+				key,
+				options: {
+					delete: "Delete Machine",
+				},
+				onSelect: (option) => {
+					switch (option) {
+						case "delete":
+							if (machine) {
+								console.log("Deleting machine");
+								window.ipc.send("delete_machine", machine);
+							}
+
+							break;
+					}
+				},
+			}),
+			[machine],
+		) as (key: {}) => Menu<Record<string, string>>,
+	);
 
 	const uuid = useMemo(() => {
 		return (machine?.config.discovered && machine.config.uuid) || null;
@@ -34,8 +61,9 @@ export function Machine({ machine, parentKey, setUnfocused, index }: Props) {
 			onEnter={
 				isMachineOnline(machine || null) && (() => navigate(`/machine/${uuid}`))
 			}
+			onOptions={openMenu}
 		>
-			<div className={styles.content}>
+			<div className={styles.content} ref={ref}>
 				<span className={styles.title}>{name}</span>
 			</div>
 		</Clickable>
