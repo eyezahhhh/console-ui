@@ -80,7 +80,6 @@ export function ContextMenu() {
 				index={0}
 				className={styles.container}
 				setUnfocused={(action) => {
-					console.log("Context menu unfocus", action);
 					if (action == MovementAction.BACK) {
 						setFocused(menu.key, action);
 						setMenu(null);

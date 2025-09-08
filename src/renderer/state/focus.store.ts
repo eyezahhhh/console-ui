@@ -1,6 +1,7 @@
 import MovementAction from "@enum/movement-action.enum";
 import { getMousePosition } from "@hook/mouse-position.hook";
 import { create } from "zustand";
+import useContextMenuStore from "./context-menu.store";
 
 export type Connection = {
 	parent: {} | null;
@@ -65,23 +66,47 @@ const useFocusStore = create<IFocusState>((set, get) => ({
 		return () => {
 			const connection = get().hooks.get(key);
 			get().hooks.delete(key);
-			if (get().focusedComponent?.key === key) {
-				if (connection?.parent) {
-					const parentConnection = get().hooks.get(connection.parent);
-					if (parentConnection) {
-						const index = parentConnection.children.indexOf(key);
-						if (index >= 0) {
-							parentConnection.children.splice(index, 1);
-						}
-						set((oldState) => ({
-							lastFocusedComponent: oldState.focusedComponent,
-							focusedComponent: {
-								...parentConnection,
-								key: connection.parent!,
-							},
-						}));
+			let wasFocused = get().focusedComponent?.key === key;
+			if (!wasFocused) {
+				const menuState = useContextMenuStore.getState();
+				if (get().isFocusedChildOf(menuState.popupKey)) {
+					if (menuState.menu?.key === key) {
+						wasFocused = true;
 					}
 				}
+			}
+
+			if (connection?.parent) {
+				const parentConnection = get().hooks.get(connection.parent);
+				if (parentConnection) {
+					const index = parentConnection.children.indexOf(key);
+					if (index >= 0) {
+						parentConnection.children.splice(index, 1);
+					}
+				}
+			}
+
+			if (wasFocused) {
+				let traversalKey = connection?.parent || null;
+				while (traversalKey) {
+					const connection = get().hooks.get(traversalKey);
+					if (!connection) {
+						break;
+					}
+					if (connection.focusable) {
+						set((oldState) => ({
+							lastFocusedComponent: oldState.focusedComponent,
+							focusedComponent: connection,
+						}));
+						return;
+					}
+					traversalKey = connection.parent;
+				}
+
+				set((oldState) => ({
+					lastFocusedComponent: oldState.focusedComponent,
+					focusedComponent: null,
+				}));
 			}
 		};
 	},
