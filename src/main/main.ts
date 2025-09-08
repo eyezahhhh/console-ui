@@ -49,7 +49,10 @@ Promise.all([app.whenReady(), settings.read()]).then(() => {
 							port = part;
 						}
 					}
-					getMoonlight().addHost(parts[0], port);
+					getMoonlight().addHost(parts[0], {
+						port,
+						known: true, // manually added hosts should show up immediately, even if they don't actually exist
+					});
 					return true;
 				} catch (e) {
 					logger.error("Failed to create Moonlight host:", e);
