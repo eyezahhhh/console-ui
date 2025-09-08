@@ -59,32 +59,33 @@ export class MoonlightEmbeddedController extends Logger {
 					})
 					.catch((error) =>
 						this.error("Failed to scan for existing Moonlight hosts:", error),
-					);
+					)
+					.finally(() => {
+						Bonjour().find(
+							{
+								type: "nvstream",
+							},
+							(service) => {
+								this.log("Discovered NVIDIA Gamestream/Sunshine instance");
 
-				Bonjour().find(
-					{
-						type: "nvstream",
-					},
-					(service) => {
-						this.log("Discovered NVIDIA Gamestream/Sunshine instance");
+								const ipv4 = service.addresses.find(
+									(address) => address.split(".").length == 4,
+								);
+								if (!ipv4) {
+									this.warn(
+										"NVIDIA Gamestream/Sunshine instance wasn't reachable via an IPv4 address",
+									);
+									return;
+								}
 
-						const ipv4 = service.addresses.find(
-							(address) => address.split(".").length == 4,
+								try {
+									this.addHost(ipv4, service.port);
+								} catch (e) {
+									this.warn(e);
+								}
+							},
 						);
-						if (!ipv4) {
-							this.warn(
-								"NVIDIA Gamestream/Sunshine instance wasn't reachable via an IPv4 address",
-							);
-							return;
-						}
-
-						try {
-							this.addHost(ipv4, service.port);
-						} catch (e) {
-							this.warn(e);
-						}
-					},
-				);
+					});
 			})
 			.catch((e) => {
 				this.error(e);
