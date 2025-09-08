@@ -51,7 +51,9 @@ export default class MoonlightHost extends Emitter<Events> {
 		if (typeof json.address != "string" || typeof json.port != "number") {
 			throw new Error("Disk info missing address or port");
 		}
-		return controller.addHost(json.address, json.port);
+		return controller.addHost(json.address, {
+			port: json.port,
+		});
 	}
 
 	constructor(
@@ -59,6 +61,7 @@ export default class MoonlightHost extends Emitter<Events> {
 		port: number | null,
 		private readonly controller: MoonlightEmbeddedController,
 		private readonly ipc: IpcMain,
+		private known: boolean,
 	) {
 		super();
 		this.data = {
@@ -368,6 +371,11 @@ export default class MoonlightHost extends Emitter<Events> {
 			return;
 		}
 		this.status = status;
+
+		if (!this.isKnown() && status.online) {
+			this.known = true;
+		}
+
 		this.emit("status", this.getMachine());
 	}
 
@@ -794,5 +802,9 @@ export default class MoonlightHost extends Emitter<Events> {
 					this.logger.error("failed to remove host file:", e);
 				});
 		} catch {}
+	}
+
+	isKnown() {
+		return this.known;
 	}
 }
