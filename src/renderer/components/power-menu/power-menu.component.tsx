@@ -39,6 +39,7 @@ export function PowerMenu({ open, onClose }: Props) {
 					{...props}
 					className={styles.button}
 					onEnter={() => {
+						onClose?.();
 						window.ipc.send("suspend");
 					}}
 				>
