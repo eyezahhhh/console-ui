@@ -9,6 +9,7 @@ type RendererToMainListener = {
 	start_update: [];
 	shutdown: [];
 	reboot: [];
+	suspend: [];
 	delete_machine: [IMachine];
 };
 export default RendererToMainListener;
