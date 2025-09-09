@@ -1,11 +1,11 @@
 import Button from "@component/button";
-import MachineList from "@component/machine-list";
+import MachineGrid from "@component/machine-grid";
 import Modal from "@component/modal";
 import NavList from "@component/nav-list";
 import TextInput from "@component/text-input";
 import IFocusableProps from "@interface/focusable-props.interface";
-import { abbreviateMeasurement } from "@util/number.util";
 import { useEffect, useState } from "react";
+import styles from "./home.module.scss";
 
 export function HomePage(props: IFocusableProps) {
 	const [createOpen, setCreateOpen] = useState(false);
@@ -43,9 +43,13 @@ export function HomePage(props: IFocusableProps) {
 					</Button>
 				)}
 			</Modal>
-			{(props) => <MachineList {...props} />}
+			{(props) => <MachineGrid {...props} />}
 			{(props) => (
-				<Button {...props} onEnter={() => setCreateOpen(true)}>
+				<Button
+					{...props}
+					onEnter={() => setCreateOpen(true)}
+					className={styles.createButton}
+				>
 					New Machine
 				</Button>
 			)}
