@@ -71,7 +71,6 @@ export function NavList({
 
 				for (let index = childIndex + increment; true; index += increment) {
 					if (index < 0 || index >= functionalChildrenCount) {
-						console.log("Out of bounds");
 						setUnfocused(action);
 						return;
 					}
