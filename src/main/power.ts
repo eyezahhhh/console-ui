@@ -15,3 +15,11 @@ export function reboot() {
 		execSync("shutdown -r now");
 	}
 }
+
+export function suspend() {
+	if (process.platform === "win32") {
+		execSync("rundll32.exe powrprof.dll,SetSuspendState 0,1,0");
+	} else if (process.platform === "linux" || process.platform === "darwin") {
+		execSync("systemctl suspend");
+	}
+}
