@@ -17,6 +17,7 @@ export function PowerMenu({ open, onClose }: Props) {
 					onEnter={() => {
 						window.ipc.send("restart");
 					}}
+					key="restart"
 				>
 					Restart Console UI
 				</Button>
@@ -28,6 +29,7 @@ export function PowerMenu({ open, onClose }: Props) {
 					onEnter={() => {
 						window.ipc.send("quit");
 					}}
+					key="quit"
 				>
 					Exit Console UI
 				</Button>
@@ -37,8 +39,20 @@ export function PowerMenu({ open, onClose }: Props) {
 					{...props}
 					className={styles.button}
 					onEnter={() => {
+						window.ipc.send("suspend");
+					}}
+				>
+					Suspend
+				</Button>
+			)}
+			{(props) => (
+				<Button
+					{...props}
+					className={styles.button}
+					onEnter={() => {
 						window.ipc.send("reboot");
 					}}
+					key="reboot"
 				>
 					Restart Computer
 				</Button>
@@ -50,6 +64,7 @@ export function PowerMenu({ open, onClose }: Props) {
 					onEnter={() => {
 						window.ipc.send("shutdown");
 					}}
+					key="shutdown"
 				>
 					Shutdown Computer
 				</Button>

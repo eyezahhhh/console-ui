@@ -1,9 +1,6 @@
 name: Compilation Test
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
     branches:
       - main

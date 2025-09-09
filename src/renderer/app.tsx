@@ -36,9 +36,10 @@ function App() {
 			>
 				{(props) => <TopMenu {...props} key="top" />}
 				{isDownloading
-					? (props) => <UpdatingPage {...props} />
+					? (props) => <UpdatingPage {...props} key="updating" />
 					: (props) => (
 							<PageRouter
+								key="router"
 								{...props}
 								routes={{
 									"/": (props) => <HomePage {...props} />,

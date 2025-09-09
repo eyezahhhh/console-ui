@@ -6,7 +6,6 @@ import DEFAULT_SETTINGS from "@const/default-setting.const";
 const emitter = new StandaloneEmitter<{ settings: [ISettings] }>();
 let settings: ISettings = structuredClone(DEFAULT_SETTINGS);
 const updateSettings = (newSettings: ISettings) => {
-	console.log("Received settings:", settings);
 	settings = newSettings;
 	emitter.emit("settings", settings);
 };
