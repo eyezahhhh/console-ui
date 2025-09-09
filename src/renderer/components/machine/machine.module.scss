@@ -15,17 +15,31 @@
 	}
 
 	.content {
-		width: 400px;
 		height: calc(400px / 1.61);
 		display: flex;
 		background: var(--color-background-surface);
 		transition: background 0.15s;
+		flex-direction: column;
+		justify-content: space-between;
 
 		.title {
 			font-family: var(--font-stylish-title);
 			color: var(--color-text);
 			font-size: 3rem;
 			padding: 0 10px;
+			text-align: left;
+			word-wrap: break-word;
+		}
+
+		.iconContainer {
+			display: flex;
+			flex-direction: row-reverse;
+			padding: 8px;
+
+			.icon {
+				color: var(--color-text);
+				font-size: 4rem;
+			}
 		}
 	}
 
