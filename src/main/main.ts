@@ -7,6 +7,7 @@ import Settings from "./settings";
 import Updater from "./updater";
 import { reboot, shutdown, suspend } from "./power";
 import { spawn } from "child_process";
+import PowerSupply from "./power-supply/power-supply-manager";
 
 const logger = new StandaloneLogger("Main");
 
@@ -22,6 +23,7 @@ const settings = new Settings();
 Promise.all([app.whenReady(), settings.read()]).then(() => {
 	let getMoonlight: () => MoonlightEmbeddedController;
 	let getUpdater: () => Updater;
+	let getPowerSupply: () => PowerSupply;
 
 	const ipc = new IpcMain(
 		{
@@ -66,12 +68,16 @@ Promise.all([app.whenReady(), settings.read()]).then(() => {
 				getUpdater().getDownloadProgress(),
 			],
 			get_version: () => app.getVersion(),
+			get_power_supplies: () => getPowerSupply().getPowerSupplies(),
 		},
 		IS_DEV,
 		settings,
 	);
 	const updater = new Updater(ipc);
 	getUpdater = () => updater;
+
+	const powerSupply = new PowerSupply(ipc);
+	getPowerSupply = () => powerSupply;
 
 	ipc.addEventListener("quit", () => {
 		const command = settings.get().exitCommand;
