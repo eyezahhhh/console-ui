@@ -26,3 +26,9 @@ export function isMachinePaired(
 ): machine is Extract<IMachine, { online: true; isPaired: true }> {
 	return isMachineOnline(machine) && machine.isPaired;
 }
+
+export function enumValues<T extends object>(e: T) {
+	return Object.values(e).filter(
+		(v) => typeof v !== "number" || !Object.keys(e).includes(v as any),
+	) as Array<T[keyof T]>;
+}
