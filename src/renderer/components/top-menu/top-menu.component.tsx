@@ -15,6 +15,9 @@ import {
 } from "@mui/icons-material";
 import useUpdate from "@hook/update.hook";
 import UpdateModal from "@component/update-modal";
+import usePowerSupplies from "@hook/power-supplies.hook";
+import PowerSupplyType from "@enum/power-supply-type.enum";
+import { getPowerSupplyIcon } from "@util/icon.util";
 
 interface Props extends IFocusableProps {}
 
@@ -24,6 +27,7 @@ export function TopMenu(props: Props) {
 	const { availableUpdate, isDownloading } = useUpdate();
 	const [powerMenuOpen, setPowerMenuOpen] = useState(false);
 	const [updateModalOpen, setUpdateModalOpen] = useState(false);
+	const batteries = usePowerSupplies([PowerSupplyType.BATTERY]);
 
 	useEffect(() => {
 		if (updateModalOpen && isDownloading) {
@@ -50,6 +54,21 @@ export function TopMenu(props: Props) {
 				parentKey={props.parentKey}
 				index={props.index}
 			>
+				{!!batteries.length && (
+					<div className={styles.batteries} key="battery">
+						{batteries.map((battery) => {
+							const Icon = getPowerSupplyIcon(battery);
+
+							return (
+								<div className={styles.battery} key={battery.id}>
+									<Icon className={styles.icon} />
+									<span className={styles.percent}>{battery.percent}%</span>
+								</div>
+							);
+						})}
+					</div>
+				)}
+
 				{!isDownloading &&
 					((props) => (
 						<TopMenuButton

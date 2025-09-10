@@ -38,6 +38,10 @@ export class Emitter<T extends Record<string, any[]>> {
 			}
 		}
 	}
+
+	protected removeAllListeners() {
+		this.listeners.clear();
+	}
 }
 
 export class StandaloneEmitter<
@@ -45,5 +49,8 @@ export class StandaloneEmitter<
 > extends Emitter<T> {
 	public emit<K extends keyof T>(event: K, ...response: T[K]) {
 		super.emit(event, ...response);
+	}
+	public removeAllListeners(): void {
+		super.removeAllListeners();
 	}
 }

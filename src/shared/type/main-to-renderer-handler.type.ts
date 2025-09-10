@@ -2,6 +2,7 @@ import ISettings from "@interface/settings.interface";
 import IMachine from "../interface/machine.interface";
 import IAvailableUpdate from "@interface/available-update.interface";
 import { ProgressInfo } from "electron-updater";
+import IPowerSupply from "@interface/power-supply.interface";
 
 type MainToRendererHandler = {
 	get_machines: [[], IMachine[]];
@@ -13,5 +14,6 @@ type MainToRendererHandler = {
 	get_update_status: [[], [boolean, ProgressInfo | null]];
 	get_version: [[], string];
 	get_app_image: [[IMachine, number], [string, boolean] | null];
+	get_power_supplies: [[], IPowerSupply[]];
 };
 export default MainToRendererHandler;
