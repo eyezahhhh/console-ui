@@ -122,6 +122,7 @@ export class PowerSupply extends Emitter<Events> {
 					Charging: BatteryState.CHARGING,
 					Full: BatteryState.CHARGED,
 					Discharging: BatteryState.DISCHARGING,
+					Unknown: BatteryState.UNKNOWN,
 				}[data];
 				if (state) {
 					status.state = state;
