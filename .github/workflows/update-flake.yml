@@ -1,0 +1,56 @@
+name: Update Flake on Release
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  update-flake:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v25
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+
+      - name: Get new version from release tag
+        run: |
+          # Removes the 'v' prefix from the tag name (e.g., v0.0.18 -> 0.0.18)
+          VERSION=$(echo "${{ github.ref_name }}" | sed 's/v//')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Calculate new asset hashes
+        run: |
+          X86_64_URL="https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Console-UI-${{ env.VERSION }}.AppImage"
+          X86_64_HASH=$(nix-prefetch-url "$X86_64_URL")
+          echo "X86_64_HASH=$X86_64_HASH" >> $GITHUB_ENV
+          echo "Calculated x86_64 hash: $X86_64_HASH"
+
+          AARCH64_URL="https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Console-UI-${{ env.VERSION }}-arm64.AppImage"
+          AARCH64_HASH=$(nix-prefetch-url "$AARCH64_URL")
+          echo "AARCH64_HASH=$AARCH64_HASH" >> $GITHUB_ENV
+          echo "Calculated aarch64 hash: $AARCH64_HASH"
+
+      - name: Update flake.nix with new version and hashes
+        run: |
+          sed -i "s/version = \".*\"; # FLAKE_UPDATE_MARKER_VERSION/version = \"${{ env.VERSION }}\"; # FLAKE_UPDATE_MARKER_VERSION/" flake.nix
+
+          sed -i "s/sha256 = \".*\"; # FLAKE_UPDATE_MARKER_SHA256_X86_64/sha256 = \"${{ env.X86_64_HASH }}\"; # FLAKE_UPDATE_MARKER_SHA256_X86_64/" flake.nix
+
+          sed -i "s/sha256 = \".*\"; # FLAKE_UPDATE_MARKER_SHA256_AARCH64/sha256 = \"${{ env.AARCH64_HASH }}\"; # FLAKE_UPDATE_MARKER_SHA256_AARCH64/" flake.nix
+
+      - name: Update flake.lock
+        run: nix flake lock --update-input nixpkgs
+
+      - name: Commit and push changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "flake: Update to version ${{ env.VERSION }}"
+          branch: dev
+          file_pattern: flake.nix flake.lock
