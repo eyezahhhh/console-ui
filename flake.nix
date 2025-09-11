@@ -23,9 +23,7 @@
           };
         };
 
-      in
-      {
-        packages.default = pkgs.appimageTools.wrapType2 rec {
+        appPkg = pkgs.appimageTools.wrapType2 rec {
           pname = "console-ui";
           inherit version;
 
@@ -38,11 +36,30 @@
 
           meta = with pkgs.lib; {
             description = "Console-like frontend for Moonlight";
-            homepage = "[https://github.com/eyezahhhh/console-ui](https://github.com/eyezahhhh/console-ui)";
+            homepage = "https://github.com/eyezahhhh/console-ui";
             license = licenses.mit;
             maintainers = with maintainers; [ "eyezahhhh" ];
             platforms = [ "x86_64-linux" "aarch64-linux" ];
           };
+        };
+
+        desktopItem = pkgs.makeDesktopItem {
+          name = "console-ui"; # The name of the resulting .desktop file
+          exec = "console-ui"; # The command that will be run
+          comment = "Console-like frontend for Moonlight";
+          desktopName = "Console UI";
+          genericName = "Moonlight Client";
+          # icon = ./path/to/icon.png;
+          icon = "utilities-terminal"; # todo: change
+          categories = [ "Game" "Network" ];
+        };
+
+      in
+      {
+        packages.default = pkgs.symlinkJoin {
+          name = "console-ui-with-desktop-entry";
+          paths = [ appPkg desktopItem ];
+          meta = appPkg.meta;
         };
       });
 }
