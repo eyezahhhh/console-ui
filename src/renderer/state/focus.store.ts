@@ -35,7 +35,8 @@ interface IFocusState {
 	getChildrenOf: (parentKey: {}) => Connection[];
 	isFocusedChildOf: (parentKey: {}) => boolean;
 	traverse: (key: {}) => Connection[];
-	getTargetLocation: () => [number, number];
+	getTargetLocation: (connection?: Connection | null) => [number, number];
+	focusPosition: [number, number];
 }
 
 const useFocusStore = create<IFocusState>((set, get) => ({
@@ -43,6 +44,7 @@ const useFocusStore = create<IFocusState>((set, get) => ({
 	lastFocusedComponent: null,
 	lastAction: MovementAction.ENTER,
 	hooks: new Map(),
+	focusPosition: [0, 0] as [number, number],
 	registerElement: ({ key, parentKey, index, ref, move, focusable }) => {
 		get().hooks.set(key, {
 			parent: parentKey,
@@ -146,6 +148,9 @@ const useFocusStore = create<IFocusState>((set, get) => ({
 					...connectionPositions[0].connection,
 				},
 				lastAction: action,
+				focusPosition: get().getTargetLocation(
+					connectionPositions[0].connection,
+				),
 			}));
 			return true;
 		} else {
@@ -156,6 +161,7 @@ const useFocusStore = create<IFocusState>((set, get) => ({
 					key,
 				},
 				lastAction: action,
+				focusPosition: get().getTargetLocation(connection),
 			}));
 			return true;
 		}
@@ -226,6 +232,9 @@ const useFocusStore = create<IFocusState>((set, get) => ({
 					...connectionPositions[0].connection,
 				},
 				lastAction: action,
+				focusPosition: get().getTargetLocation(
+					connectionPositions[0].connection,
+				),
 			}));
 			return true;
 		} else {
@@ -236,6 +245,7 @@ const useFocusStore = create<IFocusState>((set, get) => ({
 					key: connectionInfo[0],
 				},
 				lastAction: action,
+				focusPosition: get().getTargetLocation(connectionInfo[1]),
 			}));
 			return true;
 		}
@@ -290,10 +300,12 @@ const useFocusStore = create<IFocusState>((set, get) => ({
 
 		return connections;
 	},
-	getTargetLocation: () => {
-		const focused = get().focusedComponent;
-		if (focused) {
-			const box = focused.ref.getBoundingClientRect();
+	getTargetLocation: (connection?: Connection | null) => {
+		if (!connection) {
+			connection = get().focusedComponent;
+		}
+		if (connection) {
+			const box = connection.ref.getBoundingClientRect();
 			return [box.x + box.width / 2, box.y + box.height / 2];
 		}
 		return getMousePosition();
