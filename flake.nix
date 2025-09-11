@@ -10,22 +10,20 @@
     flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (system:
       let
         pkgs = import nixpkgs { inherit system; };
-        version = "0.0.17"; # FLAKE_UPDATE_MARKER_VERSION
+        version = "0.0.18"; # FLAKE_UPDATE_MARKER_VERSION
 
         sources = {
           "x86_64-linux" = {
-            url = "[https://github.com/eyezahhhh/console-ui/releases/download/v$](https://github.com/eyezahhhh/console-ui/releases/download/v$){version}/Console-UI-${version}.AppImage";
-            sha256 = "1532ypnx27p7iy5sj69d060bz8i9743yw7fx5xpijvnsdhy8xsn3"; # FLAKE_UPDATE_MARKER_SHA256_X86_64
+            url = "https://github.com/eyezahhhh/console-ui/releases/download/v${version}/Console-UI-${version}.AppImage";
+            sha256 = "1vxm6gdb2zf01mql7b61gyjwg5dah9ii6h0i63y5bhi6wj2fgh9v"; # FLAKE_UPDATE_MARKER_SHA256_X86_64
           };
           "aarch64-linux" = {
-            url = "[https://github.com/eyezahhhh/console-ui/releases/download/v$](https://github.com/eyezahhhh/console-ui/releases/download/v$){version}/Console-UI-${version}-arm64.AppImage";
-            sha256 = "0q55r7zzg7l45w1685khvadndnsqpmdf97jf5ggvlsvrzy0fsi38"; # FLAKE_UPDATE_MARKER_SHA256_AARCH64
+            url = "https://github.com/eyezahhhh/console-ui/releases/download/v${version}/Console-UI-${version}-arm64.AppImage";
+            sha256 = "15qv2gq8jzy3jbqyli063n690hrzdwlgxjabapicsh7r9kax0i8z"; # FLAKE_UPDATE_MARKER_SHA256_AARCH64
           };
         };
 
-      in
-      {
-        packages.default = pkgs.appimageTools.wrapType2 rec {
+        appPkg = pkgs.appimageTools.wrapType2 rec {
           pname = "console-ui";
           inherit version;
 
@@ -38,11 +36,30 @@
 
           meta = with pkgs.lib; {
             description = "Console-like frontend for Moonlight";
-            homepage = "[https://github.com/eyezahhhh/console-ui](https://github.com/eyezahhhh/console-ui)";
+            homepage = "https://github.com/eyezahhhh/console-ui";
             license = licenses.mit;
             maintainers = with maintainers; [ "eyezahhhh" ];
             platforms = [ "x86_64-linux" "aarch64-linux" ];
           };
+        };
+
+        desktopItem = pkgs.makeDesktopItem {
+          name = "console-ui"; # The name of the resulting .desktop file
+          exec = "console-ui"; # The command that will be run
+          comment = "Console-like frontend for Moonlight";
+          desktopName = "Console UI";
+          genericName = "Moonlight Client";
+          # icon = ./path/to/icon.png;
+          icon = "utilities-terminal"; # todo: change
+          categories = [ "Game" "Network" ];
+        };
+
+      in
+      {
+        packages.default = pkgs.symlinkJoin {
+          name = "console-ui-with-desktop-entry";
+          paths = [ appPkg desktopItem ];
+          meta = appPkg.meta;
         };
       });
 }
