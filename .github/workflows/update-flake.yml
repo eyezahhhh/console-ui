@@ -21,7 +21,6 @@ jobs:
 
       - name: Get new version from release tag
         run: |
-          # Removes the 'v' prefix from the tag name (e.g., v0.0.18 -> 0.0.18)
           VERSION=$(echo "${{ github.ref_name }}" | sed 's/v//')
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
