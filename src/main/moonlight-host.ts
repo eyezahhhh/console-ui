@@ -31,13 +31,13 @@ type Events = {
 
 export default class MoonlightHost extends Emitter<Events> {
 	private readonly axios: AxiosInstance;
-	private uuid: string | null = null;
 	private httpsPort: number | null = null;
 	private infoFetchAbort: AbortController | null = null;
 	private logger: StandaloneLogger;
 	private pairAbort: AbortController | null = null;
 	private destroyed = false;
 	private readonly destroyCallbacks = new Set<() => void>();
+	private known: boolean;
 
 	private data: IMoonlightHostDiskInfo;
 	private status: IMoonlightHostStatus = {
@@ -53,6 +53,7 @@ export default class MoonlightHost extends Emitter<Events> {
 		}
 		return controller.addHost(json.address, {
 			port: json.port,
+			uuid,
 		});
 	}
 
@@ -61,7 +62,8 @@ export default class MoonlightHost extends Emitter<Events> {
 		port: number | null,
 		private readonly controller: MoonlightEmbeddedController,
 		private readonly ipc: IpcMain,
-		private known: boolean,
+		private uuid: string | null,
+		known?: boolean,
 	) {
 		super();
 		this.data = {
@@ -69,6 +71,7 @@ export default class MoonlightHost extends Emitter<Events> {
 			port: port || 47989,
 			discovered: false,
 		};
+		this.known = known || !!this.uuid;
 
 		this.axios = Axios.create({
 			baseURL: `http://${this.getAddress()}:${this.data.port}`,
@@ -79,8 +82,11 @@ export default class MoonlightHost extends Emitter<Events> {
 		this.logger.log(`Created new Moonlight host`);
 
 		this.restoreInfo()
-			.catch(() => {
-				this.logger.log("Couldn't restore info from disk, host must be new.");
+			.catch((e) => {
+				this.logger.log(
+					"Couldn't restore info from disk, host must be new.",
+					e,
+				);
 			})
 			.finally(() => this.fetchServerInfo())
 			.catch((e) => this.logger.error("Error while fetching server info:", e));
@@ -152,6 +158,7 @@ export default class MoonlightHost extends Emitter<Events> {
 			const response = await createAxios().then((axios) =>
 				axios.get("serverinfo", {
 					signal: controller.signal,
+					timeout: 5_000,
 				}),
 			);
 
@@ -190,6 +197,7 @@ export default class MoonlightHost extends Emitter<Events> {
 
 			const isNewUuid = this.uuid != xml.uniqueid;
 			this.uuid = xml.uniqueid;
+			this.known = true;
 			this.httpsPort = xml.HttpsPort;
 
 			if (isNewUuid) {
@@ -218,6 +226,7 @@ export default class MoonlightHost extends Emitter<Events> {
 							uniqueid: uniqueId,
 							uuid: this.randomUUID(),
 						}),
+						timeout: 5_000,
 					}),
 				);
 
@@ -417,7 +426,7 @@ export default class MoonlightHost extends Emitter<Events> {
 		this.logger.log(`Reading info from disk... (${storageFile})`);
 		const data = await promisify(readFile)(storageFile);
 		const json = JSON.parse(data.toString("utf-8")) as IMoonlightHostDiskInfo;
-		this.logger.log("Successfully read info from disk.");
+		this.logger.log("Successfully read info from disk.", json);
 		this.data = json;
 	}
 

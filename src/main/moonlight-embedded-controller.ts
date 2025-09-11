@@ -113,6 +113,7 @@ export class MoonlightEmbeddedController extends Logger {
 		address: string,
 		options: {
 			port?: number;
+			uuid?: string;
 			known?: boolean;
 		} = {},
 	) {
@@ -129,7 +130,8 @@ export class MoonlightEmbeddedController extends Logger {
 			options.port || null,
 			this,
 			this.ipc,
-			!!options.known,
+			options.uuid || null,
+			options.known,
 		);
 		this.hosts.add(host);
 		host.addEventListener("status", () => {
