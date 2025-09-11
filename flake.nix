@@ -10,16 +10,16 @@
     flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (system:
       let
         pkgs = import nixpkgs { inherit system; };
-        version = "0.0.18"; # FLAKE_UPDATE_MARKER_VERSION
+        version = "0.1.0"; # FLAKE_UPDATE_MARKER_VERSION
 
         sources = {
           "x86_64-linux" = {
             url = "https://github.com/eyezahhhh/console-ui/releases/download/v${version}/Console-UI-${version}.AppImage";
-            sha256 = "1vxm6gdb2zf01mql7b61gyjwg5dah9ii6h0i63y5bhi6wj2fgh9v"; # FLAKE_UPDATE_MARKER_SHA256_X86_64
+            sha256 = "0kc23s31006yq04l5mavq3k6115jj3h5g2k4zbq2zb49g7ncsm21"; # FLAKE_UPDATE_MARKER_SHA256_X86_64
           };
           "aarch64-linux" = {
             url = "https://github.com/eyezahhhh/console-ui/releases/download/v${version}/Console-UI-${version}-arm64.AppImage";
-            sha256 = "15qv2gq8jzy3jbqyli063n690hrzdwlgxjabapicsh7r9kax0i8z"; # FLAKE_UPDATE_MARKER_SHA256_AARCH64
+            sha256 = "11c2qdvkpvssya467g5311v2fx7vdaxy26iw39g34qm2bbs9q9q1"; # FLAKE_UPDATE_MARKER_SHA256_AARCH64
           };
         };
 
