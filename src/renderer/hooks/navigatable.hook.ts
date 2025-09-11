@@ -9,13 +9,14 @@ interface Props {
 	dontFocusElement?: boolean;
 	disabled?: boolean;
 	focusable?: boolean;
+	isRoot?: boolean;
 }
 
 export default function useNavigatable<T extends HTMLElement>(
 	parentKey: {} | null,
 	index: number,
 	onMoveAction: (action: MovementAction) => void,
-	{ onFocus, dontFocusElement, disabled, focusable }: Props = {},
+	{ onFocus, dontFocusElement, disabled, focusable, isRoot }: Props = {},
 ) {
 	const moveRef = useRef<(action: MovementAction) => void>(onMoveAction);
 	useEffect(() => {
@@ -37,7 +38,7 @@ export default function useNavigatable<T extends HTMLElement>(
 
 	useGamepads({
 		onButtonPress(buttonId) {
-			if (key !== focusedComponent?.key) {
+			if (key !== focusedComponent?.key && !isRoot) {
 				return;
 			}
 			const buttons: Partial<Record<GamepadButtonId, MovementAction>> = {
