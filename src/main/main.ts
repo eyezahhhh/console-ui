@@ -18,6 +18,15 @@ if (IS_DEV) {
 	logger.log("App is starting in production mode.");
 }
 
+const exceptionLogger = new StandaloneLogger("UncaughtException");
+process.on("uncaughtException", (e) => {
+	exceptionLogger.error("An unhandled error occurred:", e);
+});
+const rejectionLogger = new StandaloneLogger("UnhandledRejection");
+process.on("unhandledRejection", (e) => {
+	rejectionLogger.error("An unhandled rejection occurred:", e);
+});
+
 const settings = new Settings();
 
 Promise.all([app.whenReady(), settings.read()]).then(() => {
