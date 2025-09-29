@@ -1,8 +1,10 @@
 import GamepadButtonId from "@enum/gamepad-button-id.enum";
 import { Emitter } from "@util/emitter.util";
+import GamepadJoystickDirection from "@enum/gamepad-joystick-direction.enum";
 
 interface GamepadState {
 	buttons: Map<GamepadButtonId, boolean>;
+	joysticks: GamepadJoystickDirection[];
 }
 
 interface GamepadInfo {
@@ -17,6 +19,7 @@ type GamepadManagerEvents = {
 	added: [Gamepad]; // gamepad
 	removed: [Gamepad]; // gamepad
 	poll: [Gamepad[]]; // gamepads
+	joystickdirection: [number, GamepadJoystickDirection, number]; // joystick index, joystick direction, controller index
 };
 
 export class GamepadManager extends Emitter<GamepadManagerEvents> {
@@ -46,7 +49,6 @@ export class GamepadManager extends Emitter<GamepadManagerEvents> {
 				event.gamepad.id.indexOf(" ("),
 			);
 			console.log(`Gamepad name: "${name}"`);
-			console.log("Loaded new gamepad");
 			let mapping = DEFAULT_MAPPING;
 
 			if (name == "Nintendo Switch Lite Gamepad") {
@@ -93,6 +95,12 @@ export class GamepadManager extends Emitter<GamepadManagerEvents> {
 						);
 					}
 				}
+
+				for (let [index, direction] of state.joysticks.entries()) {
+					if (oldState.joysticks[index] != direction) {
+						this.emit("joystickdirection", index, direction, gamepad.index);
+					}
+				}
 			}
 
 			this.emit("poll", gamepads);
@@ -119,8 +127,41 @@ export class GamepadManager extends Emitter<GamepadManagerEvents> {
 			}
 		}
 
+		const joysticks: GamepadJoystickDirection[] = [];
+
+		for (let i = 0; i < gamepad.axes.length / 2; i++) {
+			const x = Math.round(gamepad.axes[i * 2]);
+			const y = Math.round(gamepad.axes[i * 2 + 1]);
+			if (x == -1) {
+				if (y == -1) {
+					joysticks.push(GamepadJoystickDirection.UP_LEFT);
+				} else if (y == 1) {
+					joysticks.push(GamepadJoystickDirection.DOWN_LEFT);
+				} else {
+					joysticks.push(GamepadJoystickDirection.LEFT);
+				}
+			} else if (x == 1) {
+				if (y == -1) {
+					joysticks.push(GamepadJoystickDirection.UP_RIGHT);
+				} else if (y == 1) {
+					joysticks.push(GamepadJoystickDirection.DOWN_RIGHT);
+				} else {
+					joysticks.push(GamepadJoystickDirection.RIGHT);
+				}
+			} else {
+				if (y == -1) {
+					joysticks.push(GamepadJoystickDirection.UP);
+				} else if (y == 1) {
+					joysticks.push(GamepadJoystickDirection.DOWN);
+				} else {
+					joysticks.push(GamepadJoystickDirection.CENTER);
+				}
+			}
+		}
+
 		return {
 			buttons,
+			joysticks,
 		};
 	}
 }

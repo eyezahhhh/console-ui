@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { GamepadManager } from "../state/gamepad-manager";
 import GamepadButtonId from "../../shared/enum/gamepad-button-id.enum";
+import GamepadJoystickDirection from "@enum/gamepad-joystick-direction.enum";
 
 interface Props {
 	onButtonChange?: (
@@ -14,6 +15,11 @@ interface Props {
 		controllerIndex: number,
 	) => void;
 	onPoll?: (gamepads: Gamepad[]) => void;
+	onJoystickDirection?: (
+		joystickIndex: number,
+		joystickDirection: GamepadJoystickDirection,
+		controllerIndex: number,
+	) => void;
 }
 
 export default function useGamepads({
@@ -21,6 +27,7 @@ export default function useGamepads({
 	onButtonPress,
 	onButtonRelease,
 	onPoll,
+	onJoystickDirection,
 }: Props = {}) {
 	const gamepadManager = useMemo(() => GamepadManager.getInstance(), []);
 	const [gamepads, setGamepads] = useState(
@@ -95,6 +102,20 @@ export default function useGamepads({
 			gamepadManager.removeEventListener("buttonreleased", onButtonRelease);
 		};
 	}, [gamepadManager, onButtonRelease]);
+
+	useEffect(() => {
+		if (!onJoystickDirection) {
+			return;
+		}
+
+		gamepadManager.addEventListener("joystickdirection", onJoystickDirection);
+		return () => {
+			gamepadManager.removeEventListener(
+				"joystickdirection",
+				onJoystickDirection,
+			);
+		};
+	}, [gamepadManager, onJoystickDirection]);
 
 	return gamepads;
 }
