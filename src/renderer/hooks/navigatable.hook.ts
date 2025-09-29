@@ -3,6 +3,7 @@ import useFocusStore, { Connection } from "@state/focus.store";
 import MovementAction from "@enum/movement-action.enum";
 import useGamepads from "./gamepads.hook";
 import GamepadButtonId from "../../shared/enum/gamepad-button-id.enum";
+import GamepadJoystickDirection from "@enum/gamepad-joystick-direction.enum";
 
 interface Props {
 	onFocus?: (fromComponent: Connection | null, action: MovementAction) => void;
@@ -53,6 +54,28 @@ export default function useNavigatable<T extends HTMLElement>(
 			};
 
 			const action = buttons[buttonId];
+			if (action) {
+				onMoveAction(action);
+			}
+		},
+		onJoystickDirection(joystickIndex, direction) {
+			if (key !== focusedComponent?.key && !isRoot) {
+				return;
+			}
+
+			// joystick #0 is normally the movement joystick
+			if (joystickIndex) {
+				return;
+			}
+			const directions: Partial<
+				Record<GamepadJoystickDirection, MovementAction>
+			> = {
+				[GamepadJoystickDirection.UP]: MovementAction.UP,
+				[GamepadJoystickDirection.DOWN]: MovementAction.DOWN,
+				[GamepadJoystickDirection.LEFT]: MovementAction.LEFT,
+				[GamepadJoystickDirection.RIGHT]: MovementAction.RIGHT,
+			};
+			const action = directions[direction];
 			if (action) {
 				onMoveAction(action);
 			}
