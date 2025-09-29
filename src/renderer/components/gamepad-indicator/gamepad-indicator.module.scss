@@ -1,15 +1,50 @@
 .container {
+	margin-left: 10px;
+	display: flex;
+	gap: 10px;
+
 	&.disabled {
 		filter: brightness(0.5);
 	}
 
 	.bouncer {
+		position: relative;
+		transition:
+			top 0.15s ease,
+			left 0.15s ease;
+		top: 0;
+		left: 0;
+
 		.icon {
 			font-size: 2.5rem;
 		}
 
 		&.bouncing {
 			animation: #{bounce} 0.15s ease;
+		}
+
+		&.up,
+		&.up_left,
+		&.up_right {
+			top: -5px;
+		}
+
+		&.down,
+		&.down_left,
+		&.down_right {
+			top: 5px;
+		}
+
+		&.left,
+		&.up_left,
+		&.down_left {
+			left: -5px;
+		}
+
+		&.right,
+		&.up_right,
+		&.down_right {
+			left: 5px;
 		}
 	}
 }
