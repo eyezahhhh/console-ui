@@ -9,6 +9,7 @@ import Modal from "@component/modal";
 import { getGamestreamHostName } from "@util/string.util";
 import AppTile from "@component/app-tile";
 import { isMachineDiscovered, isMachinePaired } from "@util/object.util";
+import NavGrid from "@component/nav-grid";
 
 export function MachinePage(props: IFocusableProps) {
 	const params = useParams();
@@ -74,10 +75,15 @@ export function MachinePage(props: IFocusableProps) {
 			)}
 			{isMachineDiscovered(machine) &&
 				isMachinePaired(machine) &&
-				((props) => (
-					<NavList {...props} direction="horizontal" className={styles.appList}>
-						{machine.apps.length ? (
-							machine.apps.map((app, index) => (props) => (
+				((props) =>
+					machine.apps.length ? (
+						<NavGrid
+							{...props}
+							maxColumnWidth={200}
+							columnGap={20}
+							className={styles.appGrid}
+						>
+							{machine.apps.map((app, index) => (props) => (
 								<AppTile
 									{...props}
 									key={app.id}
@@ -85,12 +91,13 @@ export function MachinePage(props: IFocusableProps) {
 									app={app}
 									machine={machine}
 								/>
-							))
-						) : (
+							))}
+						</NavGrid>
+					) : (
+						<NavList {...props} direction="horizontal">
 							<span>This machine doesn't have any apps</span>
-						)}
-					</NavList>
-				))}
+						</NavList>
+					))}
 		</NavList>
 	);
 }
