@@ -11,12 +11,12 @@ export function MachineGrid({ setUnfocused, parentKey, index }: Props) {
 
 	return (
 		<NavGrid
-			columnContainerClassName={styles.container}
-			columnClassName={styles.column}
+			rowContainerClassName={styles.container}
 			setUnfocused={setUnfocused}
 			parentKey={parentKey}
 			index={index}
 			maxColumnWidth={500}
+			columnGap={20}
 		>
 			{machines.map((machine) => (props) => (
 				<Machine {...props} machine={machine} key={machine.config.address} />

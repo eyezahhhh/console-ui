@@ -4,6 +4,7 @@ import OptionalArray from "@interface/optional-array.interface";
 import useNavigatable from "@hook/navigatable.hook";
 import MovementAction from "@enum/movement-action.enum";
 import useFocusStore from "@state/focus.store";
+import { CSSProperties } from "react";
 
 interface Props extends IFocusableProps {
 	direction: "horizontal" | "vertical";
@@ -11,6 +12,7 @@ interface Props extends IFocusableProps {
 		false | React.JSX.Element | ((props: IFocusableProps) => React.JSX.Element)
 	>;
 	className?: string;
+	style?: CSSProperties;
 }
 
 export function NavList({
@@ -20,6 +22,7 @@ export function NavList({
 	setUnfocused,
 	index,
 	parentKey,
+	style,
 }: Props) {
 	const { setFocusedFromParent } = useFocusStore();
 
@@ -84,7 +87,7 @@ export function NavList({
 	});
 
 	return (
-		<div className={className} ref={ref}>
+		<div className={className} ref={ref} style={style}>
 			{mappedChildren}
 		</div>
 	);
