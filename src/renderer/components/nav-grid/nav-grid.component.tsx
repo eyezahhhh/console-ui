@@ -12,8 +12,9 @@ type Props = IFocusableProps & {
 		false | React.JSX.Element | ((props: IFocusableProps) => React.JSX.Element)
 	>;
 	className?: string;
-	columnContainerClassName?: string;
-	columnClassName?: string;
+	rowContainerClassName?: string;
+	rowClassName?: string;
+	columnGap?: number;
 } & (
 		| {
 				columns: number;
@@ -26,8 +27,8 @@ type Props = IFocusableProps & {
 export function NavGrid({
 	children,
 	className,
-	columnContainerClassName,
-	columnClassName,
+	rowContainerClassName,
+	rowClassName,
 	parentKey,
 	index,
 	setUnfocused,
@@ -35,36 +36,55 @@ export function NavGrid({
 }: Props) {
 	const { width, ref } = useResizeDetector();
 
-	const [columnCount, maxColumnWidth]: [number, number | null] = useMemo(() => {
-		if ("columns" in props) {
-			return [props.columns, null];
-		}
+	const [columnCount, columnWidth]: [number, number | null] = useMemo(() => {
+		const columnGap = props.columnGap ?? 0;
 		if (!width) {
-			return [1, props.maxColumnWidth];
+			if ("columns" in props) {
+				return [props.columns, 10];
+			} else {
+				return [1, props.maxColumnWidth];
+			}
 		}
-		return [Math.ceil(width / props.maxColumnWidth), props.maxColumnWidth];
+		if ("columns" in props) {
+			return [
+				props.columns,
+				(width - columnGap * (props.columns - 1)) / props.columns,
+			];
+		}
+
+		for (let i = 1; true; i++) {
+			console.log(
+				`Checking ${i} columns (${props.maxColumnWidth} * ${i} > ${width})`,
+			);
+			if (props.maxColumnWidth * i + columnGap * (i - 1) > width) {
+				return [i, (width - columnGap * (i - 1)) / i];
+			}
+		}
 	}, [props, width]);
 
-	const columns = useMemo(() => {
+	const rows = useMemo(() => {
 		const filteredChildren = toArray(children).filter((child) => !!child);
 
-		const columns: (
+		const rows: (
 			| React.JSX.Element
 			| ((props: IFocusableProps) => React.JSX.Element)
 		)[][] = [];
 
-		for (let i = 0; i < filteredChildren.length; i++) {
-			const column = i % columnCount;
-
-			if (columns.length <= column) {
-				columns.push([filteredChildren[i]]);
+		for (let [index, child] of filteredChildren.entries()) {
+			const rowNumber = Math.floor(index / columnCount);
+			console.log({ columnCount, index, rowNumber });
+			const row = rows[rowNumber];
+			if (row) {
+				row.push(child);
 			} else {
-				columns[column].push(filteredChildren[i]);
+				rows.push([child]);
 			}
 		}
 
-		return columns;
+		return rows;
 	}, [children, columnCount]);
+
+	console.log({ columnCount, rows });
 
 	return (
 		<div className={cc(styles.container, className)} ref={ref}>
@@ -72,25 +92,43 @@ export function NavGrid({
 				parentKey={parentKey}
 				index={index}
 				setUnfocused={setUnfocused}
-				direction="horizontal"
-				className={cc(styles.columns, columnContainerClassName)}
+				direction="vertical"
+				className={cc(styles.rows, rowContainerClassName)}
 			>
-				{columns.map((column, i) => (props) => (
-					<div
-						className={styles.columnContainer}
-						style={{
-							maxWidth: maxColumnWidth ? `${maxColumnWidth}px` : undefined,
-						}}
+				{rows.map((row, i) => (rowProps) => (
+					<NavList
+						{...rowProps}
 						key={i}
+						direction="horizontal"
+						className={cc(styles.row, rowClassName)}
+						style={{
+							gap: `${props.columnGap ?? 0}px`,
+						}}
 					>
-						<NavList
-							{...props}
-							direction="vertical"
-							className={cc(styles.column, columnClassName)}
-						>
-							{column}
-						</NavList>
-					</div>
+						{row.map((item) =>
+							typeof item == "function" ? (
+								(props) => (
+									<div
+										className={styles.itemContainer}
+										style={{
+											width: `${columnWidth}px`,
+										}}
+									>
+										{item(props)}
+									</div>
+								)
+							) : (
+								<div
+									className={styles.itemContainer}
+									style={{
+										width: `${columnWidth}px`,
+									}}
+								>
+									{item}
+								</div>
+							),
+						)}
+					</NavList>
 				))}
 			</NavList>
 		</div>
