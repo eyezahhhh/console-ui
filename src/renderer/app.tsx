@@ -16,6 +16,7 @@ import UpdatingPage from "./page/updating";
 import useNavigatable from "@hook/navigatable.hook";
 import useFocusStore from "@state/focus.store";
 import MovementAction from "@enum/movement-action.enum";
+import MachineSettingsPage from "./page/machine-settings";
 
 function App() {
 	const key = useMemo(() => ({}), []);
@@ -69,6 +70,9 @@ function App() {
 								routes={{
 									"/": (props) => <HomePage {...props} />,
 									"machine/:machine": (props) => <MachinePage {...props} />,
+									"machine/:machine/settings": (props) => (
+										<MachineSettingsPage {...props} />
+									),
 									settings: (props) => <SettingsPage {...props} />,
 									"gamepad-debug": (props) => <GamepadDebugPage {...props} />,
 								}}

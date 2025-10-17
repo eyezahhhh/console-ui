@@ -1,15 +1,17 @@
 import IFocusableProps from "@interface/focusable-props.interface";
 import styles from "./app-tile.module.scss";
 import Clickable from "@component/clickable";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import IDiscoveredMachine from "@interface/discovered-machine.interface";
 import IMachineApp from "@interface/machine-app.interface";
-import Ghost from "@/ghost";
+import Ghost from "@component/ghost";
+import { IAspectRatio } from "@interface/aspect-ratio.interface";
 
 interface Props extends IFocusableProps {
 	app: IMachineApp;
 	machine: IDiscoveredMachine;
 	focusOnCreate?: boolean;
+	aspectRatio?: IAspectRatio;
 }
 
 export function AppTile({
@@ -19,10 +21,17 @@ export function AppTile({
 	setUnfocused,
 	focusOnCreate,
 	machine,
+	aspectRatio,
 }: Props) {
-	console.log({ app });
 	const [image, setImage] = useState<string | null>(null);
 	const [isDefaultImage, setIsDefaultImage] = useState(true);
+
+	const css: Record<string, string> = useMemo(() => {
+		const ar = aspectRatio ?? { x: 1, y: 1.41 };
+		return {
+			"--aspect-ratio": `${ar.x} / ${ar.y}`,
+		};
+	}, [aspectRatio?.x, aspectRatio?.y]);
 
 	useEffect(() => {
 		let active = true;
@@ -52,7 +61,7 @@ export function AppTile({
 				window.ipc.send("stream", machine.config.uuid, app.id);
 			}}
 		>
-			<div className={styles.imageContainer}>
+			<div className={styles.imageContainer} style={css}>
 				{image ? (
 					<>
 						<img src={image} className={styles.background} />
