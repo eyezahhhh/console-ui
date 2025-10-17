@@ -24,6 +24,7 @@ import ISunshineAppList from "@interface/moonlight-app-list.interface";
 import ISunshineApp from "@interface/moonlight-app.interface";
 import { assertMachineDiscovered } from "@util/object.util";
 import { createHash } from "crypto";
+import IMachineSettings from "@interface/machine-settings.interface";
 
 type Events = {
 	status: [IMoonlightHostStatus];
@@ -216,6 +217,7 @@ export default class MoonlightHost extends Emitter<Events> {
 				type: xml.mac == "00:00:00:00:00:00" ? "sunshine" : "gamestream", // sunshine doesn't pass real mac address
 				serverCert: old.discovered ? old.serverCert : null,
 				appVersion: xml.appversion,
+				settings: old.discovered ? old.settings : {},
 			}));
 
 			if (secure) {
@@ -388,6 +390,21 @@ export default class MoonlightHost extends Emitter<Events> {
 		this.emit("status", this.getMachine());
 	}
 
+	async updateSettings(settings: IMachineSettings) {
+		let altered = false;
+		await this.updateDiskInfo((oldInfo) => {
+			if (oldInfo.discovered) {
+				altered = true;
+				return {
+					...oldInfo,
+					settings,
+				};
+			}
+			return oldInfo;
+		});
+		return altered;
+	}
+
 	private async updateDiskInfo(
 		dataCallback: (oldInfo: IMoonlightHostDiskInfo) => IMoonlightHostDiskInfo,
 		forceOverwrite?: boolean,
@@ -426,6 +443,10 @@ export default class MoonlightHost extends Emitter<Events> {
 		this.logger.log(`Reading info from disk... (${storageFile})`);
 		const data = await promisify(readFile)(storageFile);
 		const json = JSON.parse(data.toString("utf-8")) as IMoonlightHostDiskInfo;
+		if (json.discovered && !json.settings) {
+			// support older versions of app by including settings if missing
+			json.settings = {};
+		}
 		this.logger.log("Successfully read info from disk.", json);
 		this.data = json;
 	}
@@ -687,6 +708,7 @@ export default class MoonlightHost extends Emitter<Events> {
 					type: old.type,
 					serverCert: serverCert.toString("base64"),
 					appVersion: old.appVersion,
+					settings: old.settings,
 				};
 			});
 

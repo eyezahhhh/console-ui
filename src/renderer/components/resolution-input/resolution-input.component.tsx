@@ -7,6 +7,7 @@ import { cc } from "@util/string.util";
 interface Props extends IFocusableProps {
 	resolution: [number, number];
 	onChange?: (resolution: [number, number]) => void;
+	allowDecimal?: boolean;
 }
 
 export function ResolutionInput({
@@ -15,22 +16,30 @@ export function ResolutionInput({
 	setUnfocused,
 	resolution,
 	onChange,
+	allowDecimal,
 }: Props) {
 	const change = (value: string, index: 0 | 1) => {
 		if (!value.length) {
 			value = "0";
 		}
-		const int = parseInt(value);
-		if (isNaN(int)) {
+
+		let number: number;
+		if (allowDecimal) {
+			number = parseFloat(value);
+		} else {
+			number = parseInt(value);
+		}
+
+		if (isNaN(number)) {
 			return;
 		}
 
-		if (int <= 0 || int > 1_000_000) {
+		if (number <= 0 || number > 1_000_000) {
 			return;
 		}
 
 		const newRes = [...resolution] as [number, number];
-		newRes[index] = int;
+		newRes[index] = number;
 		onChange?.(newRes);
 	};
 

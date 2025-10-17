@@ -1,7 +1,7 @@
 import NavList from "@component/nav-list";
 import IFocusableProps from "@interface/focusable-props.interface";
 import OptionalArray from "@interface/optional-array.interface";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import styles from "./nav-grid.module.scss";
 import { useResizeDetector } from "react-resize-detector";
 import { toArray } from "@util/array.util";
@@ -53,9 +53,6 @@ export function NavGrid({
 		}
 
 		for (let i = 1; true; i++) {
-			console.log(
-				`Checking ${i} columns (${props.maxColumnWidth} * ${i} > ${width})`,
-			);
 			if (props.maxColumnWidth * i + columnGap * (i - 1) > width) {
 				return [i, (width - columnGap * (i - 1)) / i];
 			}
@@ -72,7 +69,6 @@ export function NavGrid({
 
 		for (let [index, child] of filteredChildren.entries()) {
 			const rowNumber = Math.floor(index / columnCount);
-			console.log({ columnCount, index, rowNumber });
 			const row = rows[rowNumber];
 			if (row) {
 				row.push(child);
@@ -83,8 +79,6 @@ export function NavGrid({
 
 		return rows;
 	}, [children, columnCount]);
-
-	console.log({ columnCount, rows });
 
 	return (
 		<div className={cc(styles.container, className)} ref={ref}>
