@@ -70,6 +70,15 @@ Promise.all([app.whenReady(), settings.read()]).then(() => {
 					return false;
 				}
 			},
+			save_machine_settings: (uuid, settings) => {
+				const host = getMoonlight().findHost(
+					(machine) => machine.config.discovered && machine.config.uuid == uuid,
+				);
+				if (!host) {
+					return false;
+				}
+				return host.updateSettings(settings);
+			},
 			get_available_update: () => getUpdater().getAvailableUpdate(),
 			get_is_update_checking: () => getUpdater().isChecking(),
 			get_update_status: () => [

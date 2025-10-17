@@ -3,12 +3,14 @@ import IMachine from "../interface/machine.interface";
 import IAvailableUpdate from "@interface/available-update.interface";
 import { ProgressInfo } from "electron-updater";
 import IPowerSupply from "@interface/power-supply.interface";
+import IMachineSettings from "@interface/machine-settings.interface";
 
 type MainToRendererHandler = {
 	get_machines: [[], IMachine[]];
 	get_settings: [[], ISettings];
 	save_settings: [[ISettings], boolean];
 	create_machine: [[string], boolean];
+	save_machine_settings: [[string, IMachineSettings], boolean];
 	get_is_update_checking: [[], boolean];
 	get_available_update: [[], IAvailableUpdate | null];
 	get_update_status: [[], [boolean, ProgressInfo | null]];

@@ -1,4 +1,5 @@
 import MoonlightHostType from "@type/moonlight-host-type.type";
+import IMachineSettings from "./machine-settings.interface";
 
 type IMoonlightHostDiskInfo = {
 	readonly address: string;
@@ -14,6 +15,7 @@ type IMoonlightHostDiskInfo = {
 			type: MoonlightHostType;
 			appVersion: string;
 			serverCert: string | null;
+			settings: IMachineSettings;
 	  }
 );
 export default IMoonlightHostDiskInfo;
